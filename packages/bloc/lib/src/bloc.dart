@@ -51,7 +51,7 @@ class _OnEvent<Event, State> {
 /// {@endtemplate}
 typedef EventModifier<Event> = FutureOr<void> Function(
   Event event,
-  Map<Object, Future<void>> events,
+  List<Completer<void>> Function() events,
   void Function() next,
 );
 
@@ -65,8 +65,8 @@ EventModifier<E> concurrent<E>() => ((event, events, next) => next());
 /// to be handled in the order it was received.
 EventModifier<E> enqueue<E>() {
   return (event, events, next) async {
-    while (events.isNotEmpty) {
-      await Future.wait<void>(events.values);
+    while (events().isNotEmpty) {
+      await Future.wait<void>(events().map((e) => e.future));
     }
     next();
   };
@@ -79,7 +79,7 @@ EventModifier<E> enqueue<E>() {
 /// will be aborted if a new event is added before a prior one completes.
 EventModifier<E> restartable<E>() {
   return (event, events, next) {
-    events.clear();
+    for (final event in events()) event.complete();
     next();
   };
 }
@@ -89,7 +89,7 @@ EventModifier<E> restartable<E>() {
 /// Dropped events never trigger the event handler.
 EventModifier<E> drop<E>() {
   return (event, events, next) {
-    if (events.isEmpty) next();
+    if (events().isEmpty) next();
   };
 }
 
@@ -97,13 +97,10 @@ EventModifier<E> drop<E>() {
 /// once the current event is done. All intermediate events are dropped.
 EventModifier<E> keepLatest<E>() {
   return (event, events, next) async {
-    if (events.isEmpty) return next();
-    final entry = events.entries.first;
-    events
-      ..clear()
-      ..addAll({entry.key: entry.value});
-    await entry.value;
-    if (events.isEmpty) return next();
+    if (events().isEmpty) return next();
+    events().sublist(1).forEach((e) => e.complete());
+    await events().first.future;
+    if (events().isEmpty) return next();
   };
 }
 
@@ -117,7 +114,7 @@ EventModifier<E> debounceTime<E>(Duration duration) {
   return (event, events, next) {
     timer?.cancel();
     timer = Timer(duration, () {
-      if (events.isEmpty) next();
+      if (events().isEmpty) return next();
     });
   };
 }
@@ -126,7 +123,7 @@ EventModifier<E> debounceTime<E>(Duration duration) {
 typedef Emit<State> = void Function(State);
 
 /// Signature for a a mapper function which is invoked with a specific [Event].
-typedef EventHandler<Event, State> = FutureOr<void> Function(
+typedef EventHandler<Event, State> = Stream<void> Function(
   Event,
   Emit<State>,
 );
@@ -173,7 +170,7 @@ abstract class Bloc<Event, State> extends BlocBase<State> {
   static BlocObserver observer = BlocObserver();
 
   late final _onEventCallbacks = <_OnEvent<Event, State>>{};
-  final _pendingEvents = <dynamic, Map<Object, Future<void>>>{};
+  final _pendingEvents = <dynamic, Map<Object, Completer<void>>>{};
 
   /// Notifies the [Bloc] of a new [event]
   /// which triggers any registered handlers.
@@ -298,7 +295,7 @@ abstract class Bloc<Event, State> extends BlocBase<State> {
     Iterable<Future<void>> futures() {
       return _pendingEvents.values.fold(
         [],
-        (prev, element) => [...prev, ...element.values],
+        (prev, element) => [...prev, ...element.values.map((e) => e.future)],
       );
     }
 
@@ -322,35 +319,48 @@ abstract class Bloc<Event, State> extends BlocBase<State> {
     for (final dynamic onEvent in callbacks) {
       void next() async {
         final key = Object();
-        try {
-          final eventHandler = () async {
-            await onEvent.handler(event, (State state) {
-              if (_pendingEvents[onEvent]?[key] == null) return;
-              onTransition(Transition(
-                currentState: this.state,
-                event: event,
-                nextState: state,
-              ));
-              emit(state);
-            });
-          };
+        final completer = Completer<void>();
+        final eventHandler = () async* {
+          yield* onEvent.handler(event, (State state) {
+            final completer = _pendingEvents[onEvent]?[key];
+            if (completer == null || completer.isCompleted) return;
+            onTransition(Transition(
+              currentState: this.state,
+              event: event,
+              nextState: state,
+            ));
+            emit(state);
+          }) as Stream<void>;
+          if (!completer.isCompleted) completer.complete();
+          _pendingEvents[onEvent]!.remove(key);
+        };
 
-          _pendingEvents.putIfAbsent(onEvent, () => {});
-          _pendingEvents[onEvent]![key] = Future<void>.value();
-          _pendingEvents[onEvent]![key] = eventHandler();
-          await _pendingEvents[onEvent]![key];
-        } catch (error, stackTrace) {
-          onError(error, stackTrace);
-        }
-        _unawaited(_pendingEvents[onEvent]!.remove(key));
+        _pendingEvents.putIfAbsent(onEvent, () => {});
+        _pendingEvents[onEvent]![key] = completer;
+        final subscription = eventHandler().listen(
+          _noop,
+          onError: (Object error, StackTrace stackTrace) {
+            if (!completer.isCompleted) completer.complete();
+            onError(error, stackTrace);
+          },
+          cancelOnError: true,
+        );
+        await completer.future;
+        _pendingEvents[onEvent]!.remove(key);
+        await subscription.cancel();
       }
 
       _pendingEvents.putIfAbsent(onEvent, () => {});
-      final events = _pendingEvents[onEvent]!;
+      final events = () => _pendingEvents[onEvent]!
+          .values
+          .where((e) => !e.isCompleted)
+          .toList(growable: false);
       onEvent.modifier(event, events, next);
     }
   }
 }
+
+void _noop(void _) {}
 
 /// {@template cubit}
 /// A [Cubit] is similar to [Bloc] but has no notion of events
@@ -509,5 +519,3 @@ abstract class BlocBase<State> {
   /// Whether the bloc is closed.
   bool get isClosed => _isClosed;
 }
-
-void _unawaited(Future<void>? future) {}

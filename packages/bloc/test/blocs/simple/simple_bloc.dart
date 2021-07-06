@@ -2,6 +2,8 @@ import 'package:bloc/bloc.dart';
 
 class SimpleBloc extends Bloc<dynamic, String> {
   SimpleBloc() : super('') {
-    on<String>((_, emit) => emit('data'));
+    on<String>((_, emit) async* {
+      emit('data');
+    });
   }
 }

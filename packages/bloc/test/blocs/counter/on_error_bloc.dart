@@ -16,7 +16,7 @@ class OnErrorBloc extends Bloc<CounterEvent, int> {
     super.onError(error, stackTrace);
   }
 
-  void _onCounterEvent(CounterEvent event, Emit<int> emit) {
+  Stream<void> _onCounterEvent(CounterEvent event, Emit<int> emit) {
     throw error;
   }
 }

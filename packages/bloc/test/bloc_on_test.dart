@@ -15,9 +15,9 @@ class TestEventBA extends TestEventB {}
 
 class TestState {}
 
-typedef OnEvent<E, S> = void Function(E event, Emit<S> emit);
+typedef OnEvent<E, S> = Stream<void> Function(E event, Emit<S> emit);
 
-void defaultOnEvent<E, S>(E event, Emit<S> emit) {}
+Stream<void> defaultOnEvent<E, S>(E event, Emit<S> emit) async* {}
 
 class TestBloc extends Bloc<TestEvent, TestState> {
   TestBloc({
@@ -74,7 +74,7 @@ void main() {
       );
     });
 
-    test('invokes all on<T> when event E is added where E is T', () {
+    test('invokes all on<T> when event E is added where E is T', () async {
       var onEventCallCount = 0;
       var onACallCount = 0;
       var onBCallCount = 0;
@@ -82,12 +82,24 @@ void main() {
       var onBACallCount = 0;
 
       final bloc = TestBloc(
-        onTestEvent: (_, __) => onEventCallCount++,
-        onTestEventA: (_, __) => onACallCount++,
-        onTestEventB: (_, __) => onBCallCount++,
-        onTestEventAA: (_, __) => onAACallCount++,
-        onTestEventBA: (_, __) => onBACallCount++,
+        onTestEvent: (_, __) async* {
+          onEventCallCount++;
+        },
+        onTestEventA: (_, __) async* {
+          onACallCount++;
+        },
+        onTestEventB: (_, __) async* {
+          onBCallCount++;
+        },
+        onTestEventAA: (_, __) async* {
+          onAACallCount++;
+        },
+        onTestEventBA: (_, __) async* {
+          onBACallCount++;
+        },
       )..add(TestEventA());
+
+      await Future<void>.delayed(Duration.zero);
 
       expect(onEventCallCount, equals(1));
       expect(onACallCount, equals(1));
@@ -96,6 +108,7 @@ void main() {
       expect(onBACallCount, equals(0));
 
       bloc.add(TestEventAA());
+      await Future<void>.delayed(Duration.zero);
 
       expect(onEventCallCount, equals(2));
       expect(onACallCount, equals(2));
@@ -104,6 +117,7 @@ void main() {
       expect(onBACallCount, equals(0));
 
       bloc.add(TestEventB());
+      await Future<void>.delayed(Duration.zero);
 
       expect(onEventCallCount, equals(3));
       expect(onACallCount, equals(2));
@@ -112,6 +126,7 @@ void main() {
       expect(onBACallCount, equals(0));
 
       bloc.add(TestEventBA());
+      await Future<void>.delayed(Duration.zero);
 
       expect(onEventCallCount, equals(4));
       expect(onACallCount, equals(2));
@@ -119,7 +134,7 @@ void main() {
       expect(onAACallCount, equals(1));
       expect(onBACallCount, equals(1));
 
-      bloc.close();
+      await bloc.close();
     });
   });
 }

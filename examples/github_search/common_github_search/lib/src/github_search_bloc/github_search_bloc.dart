@@ -12,10 +12,16 @@ class GithubSearchBloc extends Bloc<GithubSearchEvent, GithubSearchState> {
 
   final GithubRepository githubRepository;
 
-  void _onTextChanged(TextChanged event, Emit<GithubSearchState> emit) async {
+  Stream<void> _onTextChanged(
+    TextChanged event,
+    Emit<GithubSearchState> emit,
+  ) async* {
     final searchTerm = event.text;
 
-    if (searchTerm.isEmpty) return emit(SearchStateEmpty());
+    if (searchTerm.isEmpty) {
+      emit(SearchStateEmpty());
+      return;
+    }
 
     emit(SearchStateLoading());
 

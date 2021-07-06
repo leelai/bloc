@@ -11,13 +11,21 @@ const _delay = Duration(milliseconds: 100);
 
 class ComplexBloc extends Bloc<ComplexEvent, ComplexState> {
   ComplexBloc() : super(ComplexStateA()) {
-    on<ComplexEventA>((_, emit) => emit(ComplexStateA()));
-    on<ComplexEventB>((_, emit) => emit(ComplexStateB()));
+    on<ComplexEventA>((_, emit) async* {
+      emit(ComplexStateA());
+    });
+    on<ComplexEventB>((_, emit) async* {
+      emit(ComplexStateB());
+    });
     on<ComplexEventC>(
-      (_, emit) => Future<void>.delayed(_delay, () => emit(ComplexStateC())),
+      (_, emit) async* {
+        await Future<void>.delayed(_delay, () => emit(ComplexStateC()));
+      },
     );
     on<ComplexEventD>(
-      (_, emit) => Future<void>.delayed(_delay, () => emit(ComplexStateD())),
+      (_, emit) async* {
+        await Future<void>.delayed(_delay, () => emit(ComplexStateD()));
+      },
     );
   }
 

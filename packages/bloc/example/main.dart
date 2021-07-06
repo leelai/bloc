@@ -39,9 +39,9 @@ class SimpleBlocObserver extends BlocObserver {
 }
 
 void main() async {
-  Bloc.observer = SimpleBlocObserver();
+  // Bloc.observer = SimpleBlocObserver();
 
-  cubitMain();
+  // cubitMain();
   blocMain();
 }
 
@@ -68,20 +68,24 @@ void blocMain() async {
   print('----------BLOC----------');
 
   /// Create a `CounterBloc` instance.
-  final bloc = CounterBloc();
+  final bloc = CounterBloc()
+    ..stream.listen(print)
+    ..add(Increment())
+    ..add(Increment())
+    ..add(Increment());
 
-  /// Access the state of the `bloc` via `state`.
-  print(bloc.state);
+  // /// Access the state of the `bloc` via `state`.
+  // print(bloc.state);
 
-  /// Interact with the `bloc` to trigger `state` changes.
-  bloc.add(Increment());
+  // /// Interact with the `bloc` to trigger `state` changes.
+  // bloc.add(Increment());
 
-  /// Wait for next iteration of the event-loop
-  /// to ensure event has been processed.
-  await Future<void>.delayed(Duration.zero);
+  // /// Wait for next iteration of the event-loop
+  // /// to ensure event has been processed.
+  // await Future<void>.delayed(Duration.zero);
 
-  /// Access the new `state`.
-  print(bloc.state);
+  // /// Access the new `state`.
+  // print(bloc.state);
 
   /// Close the `bloc` when it is no longer needed.
   await bloc.close();
@@ -108,6 +112,9 @@ class Increment extends CounterEvent {}
 class CounterBloc extends Bloc<CounterEvent, int> {
   /// The initial state of the `CounterBloc` is 0.
   CounterBloc() : super(0) {
-    on<Increment>((event, emit) => emit(state + 1));
+    on<Increment>((event, emit) async* {
+      await Future<void>.delayed(const Duration(seconds: 1));
+      emit(state + 1);
+    }, keepLatest());
   }
 }
