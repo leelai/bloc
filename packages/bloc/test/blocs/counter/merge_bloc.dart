@@ -5,7 +5,7 @@ import '../blocs.dart';
 EventModifier<CounterEvent> custom() {
   return (event, events, next) async {
     if (event == CounterEvent.decrement) return next();
-    if (events().isEmpty) return next();
+    if (events.isEmpty) return next();
     await Future<void>.delayed(const Duration(milliseconds: 100), next);
   };
 }
@@ -23,14 +23,12 @@ class MergeBloc extends Bloc<CounterEvent, int> {
     onTransitionCallback?.call(transition);
   }
 
-  Stream<void> _onCounterEvent(CounterEvent event, Emit<int> emit) async* {
+  void _onCounterEvent(CounterEvent event, Emitter<int> emit) {
     switch (event) {
       case CounterEvent.increment:
-        emit(state + 1);
-        break;
+        return emit(state + 1);
       case CounterEvent.decrement:
-        emit(state - 1);
-        break;
+        return emit(state - 1);
     }
   }
 }

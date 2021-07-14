@@ -37,14 +37,12 @@ class CounterBloc extends Bloc<CounterEvent, int> {
     super.onError(error, stackTrace);
   }
 
-  Stream<void> _onCounterEvent(CounterEvent event, Emit<int> emit) async* {
+  void _onCounterEvent(CounterEvent event, Emitter<int> emit) {
     switch (event) {
       case CounterEvent.increment:
-        emit(state + 1);
-        break;
+        return emit(state + 1);
       case CounterEvent.decrement:
-        emit(state - 1);
-        break;
+        return emit(state - 1);
     }
   }
 }

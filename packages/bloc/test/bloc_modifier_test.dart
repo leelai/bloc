@@ -8,7 +8,7 @@ const delay = Duration(milliseconds: 30);
 class CounterBloc extends Bloc<CounterEvent, int> {
   CounterBloc(EventModifier<CounterEvent> modifier) : super(0) {
     on<CounterEvent>(
-      (event, emit) async* {
+      (event, emit) async {
         await Future<void>.delayed(delay, () {
           onCalls.add(event);
           emit(state + 1);
@@ -31,7 +31,6 @@ void main() {
         ..add(CounterEvent.increment)
         ..add(CounterEvent.increment);
 
-      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(delay);
       expect(
         bloc.onCalls,
@@ -56,7 +55,6 @@ void main() {
         ..add(CounterEvent.increment)
         ..add(CounterEvent.increment);
 
-      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(delay);
       expect(
         bloc.onCalls,
@@ -103,7 +101,6 @@ void main() {
         ..add(CounterEvent.increment)
         ..add(CounterEvent.increment);
 
-      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(delay);
       expect(bloc.onCalls, equals([CounterEvent.increment]));
       expect(states, equals([1]));
@@ -113,7 +110,6 @@ void main() {
         ..add(CounterEvent.increment)
         ..add(CounterEvent.increment);
 
-      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(delay);
       expect(
         bloc.onCalls,
@@ -126,7 +122,6 @@ void main() {
         ..add(CounterEvent.increment)
         ..add(CounterEvent.increment);
 
-      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(delay);
       expect(
         bloc.onCalls,
@@ -160,7 +155,6 @@ void main() {
         ..add(CounterEvent.increment)
         ..add(CounterEvent.increment);
 
-      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(delay);
       expect(
         bloc.onCalls,
@@ -177,7 +171,6 @@ void main() {
         ..add(CounterEvent.increment)
         ..add(CounterEvent.increment);
 
-      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(delay);
       expect(
         bloc.onCalls,
@@ -197,7 +190,6 @@ void main() {
         ..add(CounterEvent.increment)
         ..add(CounterEvent.increment);
 
-      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(delay);
       expect(
         bloc.onCalls,
@@ -243,7 +235,6 @@ void main() {
         ..add(CounterEvent.increment)
         ..add(CounterEvent.increment);
 
-      await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(delay);
       expect(
         bloc.onCalls,

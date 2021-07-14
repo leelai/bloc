@@ -74,11 +74,13 @@ void blocMain() async {
     ..add(Increment())
     ..add(Increment());
 
-  // /// Access the state of the `bloc` via `state`.
-  // print(bloc.state);
+  await Future<void>.delayed(const Duration(milliseconds: 500));
 
-  // /// Interact with the `bloc` to trigger `state` changes.
-  // bloc.add(Increment());
+  /// Access the state of the `bloc` via `state`.
+  print(bloc.state);
+
+  /// Interact with the `bloc` to trigger `state` changes.
+  bloc..add(Increment())..add(Increment())..add(Increment())..add(Increment());
 
   // /// Wait for next iteration of the event-loop
   // /// to ensure event has been processed.
@@ -112,9 +114,9 @@ class Increment extends CounterEvent {}
 class CounterBloc extends Bloc<CounterEvent, int> {
   /// The initial state of the `CounterBloc` is 0.
   CounterBloc() : super(0) {
-    on<Increment>((event, emit) async* {
-      await Future<void>.delayed(const Duration(seconds: 1));
-      emit(state + 1);
-    }, keepLatest());
+    on<Increment>(
+      (event, emit) => emit(state + 1),
+      throttleTime(const Duration(milliseconds: 300)),
+    );
   }
 }

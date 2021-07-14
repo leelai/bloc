@@ -7,11 +7,10 @@ class CounterErrorBloc extends Bloc<CounterEvent, int> {
     on<CounterEvent>(_onCounterEvent);
   }
 
-  Stream<void> _onCounterEvent(CounterEvent event, Emit<int> emit) async* {
+  void _onCounterEvent(CounterEvent event, Emitter<int> emit) {
     switch (event) {
       case CounterEvent.decrement:
-        emit(state - 1);
-        break;
+        return emit(state - 1);
       case CounterEvent.increment:
         throw Error();
     }

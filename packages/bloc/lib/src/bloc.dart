@@ -3,6 +3,46 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
+/// {@template pending_event}
+/// A pending event which exposes APIs to cancel the event,
+/// determine whether the event is complete, and wait for the event
+/// to be complete.
+/// {@endtemplate}
+class PendingEvent {
+  /// {@macro pending_event}
+  PendingEvent() {
+    _completer = Completer<void>();
+  }
+
+  late final Completer<void> _completer;
+
+  /// Cancels the current event handler
+  void cancel() {
+    if (_completer.isCompleted) return;
+    _completer.complete();
+  }
+
+  /// The future that is completed by the current event handler.
+  Future<void> get future => _completer.future;
+
+  /// Whether the current event handler has completed.
+  bool get isCompleted => _completer.isCompleted;
+}
+
+class _EventCompleter extends PendingEvent implements Completer<void> {
+  @override
+  void complete([FutureOr<void>? value]) {
+    if (_completer.isCompleted) return;
+    _completer.complete(value);
+  }
+
+  @override
+  void completeError(Object error, [StackTrace? stackTrace]) {
+    if (_completer.isCompleted) return;
+    _completer.completeError(error, stackTrace);
+  }
+}
+
 /// Signature for the callbacks registered via `on<E>()`
 /// isType allows for type comparisons to support inheritance
 /// The handler is an [EventHandler] which is responsible for event processing.
@@ -51,7 +91,7 @@ class _OnEvent<Event, State> {
 /// {@endtemplate}
 typedef EventModifier<Event> = FutureOr<void> Function(
   Event event,
-  List<Completer<void>> Function() events,
+  List<PendingEvent> events,
   void Function() next,
 );
 
@@ -65,8 +105,8 @@ EventModifier<E> concurrent<E>() => ((event, events, next) => next());
 /// to be handled in the order it was received.
 EventModifier<E> enqueue<E>() {
   return (event, events, next) async {
-    while (events().isNotEmpty) {
-      await Future.wait<void>(events().map((e) => e.future));
+    while (events.isNotEmpty) {
+      await Future.wait<void>(events.map((e) => e.future));
     }
     next();
   };
@@ -79,7 +119,7 @@ EventModifier<E> enqueue<E>() {
 /// will be aborted if a new event is added before a prior one completes.
 EventModifier<E> restartable<E>() {
   return (event, events, next) {
-    for (final event in events()) event.complete();
+    for (final event in events) event.cancel();
     next();
   };
 }
@@ -89,7 +129,7 @@ EventModifier<E> restartable<E>() {
 /// Dropped events never trigger the event handler.
 EventModifier<E> drop<E>() {
   return (event, events, next) {
-    if (events().isEmpty) next();
+    if (events.isEmpty) next();
   };
 }
 
@@ -97,10 +137,10 @@ EventModifier<E> drop<E>() {
 /// once the current event is done. All intermediate events are dropped.
 EventModifier<E> keepLatest<E>() {
   return (event, events, next) async {
-    if (events().isEmpty) return next();
-    events().sublist(1).forEach((e) => e.complete());
-    await events().first.future;
-    if (events().isEmpty) return next();
+    if (events.isEmpty) return next();
+    events.sublist(1).forEach((e) => e.cancel());
+    await events.first.future;
+    if (events.isEmpty) return next();
   };
 }
 
@@ -114,18 +154,39 @@ EventModifier<E> debounceTime<E>(Duration duration) {
   return (event, events, next) {
     timer?.cancel();
     timer = Timer(duration, () {
-      if (events().isEmpty) return next();
+      if (events.isEmpty) next();
     });
   };
 }
 
+/// Process only one event at a time dropping all events which
+/// are added less than [duration] apart.
+///
+/// It starts by emitting the first values of the input stream
+/// Then, it limits the rate of values to at most one per [duration].
+///
+/// **Note**: `throttleTime` is very useful in cases where the rate
+/// of input must be controlled such as type-ahead scenarios.
+EventModifier<E> throttleTime<E>(Duration duration) {
+  return (event, events, next) {
+    void callback() {
+      for (final e in events) e.cancel();
+      next();
+      Timer(duration, callback);
+    }
+
+    next();
+    Timer(duration, callback);
+  };
+}
+
 /// Signature for the `emit` method is used to emit a new state.
-typedef Emit<State> = void Function(State);
+typedef Emitter<State> = void Function(State);
 
 /// Signature for a a mapper function which is invoked with a specific [Event].
-typedef EventHandler<Event, State> = Stream<void> Function(
+typedef EventHandler<Event, State> = FutureOr<void> Function(
   Event,
-  Emit<State>,
+  Emitter<State>,
 );
 
 /// {@template bloc_unhandled_error_exception}
@@ -170,7 +231,7 @@ abstract class Bloc<Event, State> extends BlocBase<State> {
   static BlocObserver observer = BlocObserver();
 
   late final _onEventCallbacks = <_OnEvent<Event, State>>{};
-  final _pendingEvents = <dynamic, Map<Object, Completer<void>>>{};
+  final _pendingEvents = <dynamic, List<_EventCompleter>>{};
 
   /// Notifies the [Bloc] of a new [event]
   /// which triggers any registered handlers.
@@ -295,13 +356,14 @@ abstract class Bloc<Event, State> extends BlocBase<State> {
     Iterable<Future<void>> futures() {
       return _pendingEvents.values.fold(
         [],
-        (prev, element) => [...prev, ...element.values.map((e) => e.future)],
+        (prev, element) => [...prev, ...element.map((e) => e.future)],
       );
     }
 
     try {
       while (futures().isNotEmpty) await Future.wait<void>(futures());
     } catch (_) {}
+    _pendingEvents.clear();
     await super.close();
   }
 
@@ -318,49 +380,36 @@ abstract class Bloc<Event, State> extends BlocBase<State> {
 
     for (final dynamic onEvent in callbacks) {
       void next() async {
-        final key = Object();
-        final completer = Completer<void>();
-        final eventHandler = () async* {
-          yield* onEvent.handler(event, (State state) {
-            final completer = _pendingEvents[onEvent]?[key];
-            if (completer == null || completer.isCompleted) return;
-            onTransition(Transition(
-              currentState: this.state,
-              event: event,
-              nextState: state,
-            ));
-            emit(state);
-          }) as Stream<void>;
-          if (!completer.isCompleted) completer.complete();
-          _pendingEvents[onEvent]!.remove(key);
-        };
+        final completer = _EventCompleter();
+        try {
+          final eventHandler = () async {
+            await onEvent.handler(event, (State state) {
+              if (completer.isCompleted) return;
+              onTransition(Transition(
+                currentState: this.state,
+                event: event,
+                nextState: state,
+              ));
+              emit(state);
+            });
+          };
 
-        _pendingEvents.putIfAbsent(onEvent, () => {});
-        _pendingEvents[onEvent]![key] = completer;
-        final subscription = eventHandler().listen(
-          _noop,
-          onError: (Object error, StackTrace stackTrace) {
-            if (!completer.isCompleted) completer.complete();
-            onError(error, stackTrace);
-          },
-          cancelOnError: true,
-        );
-        await completer.future;
-        _pendingEvents[onEvent]!.remove(key);
-        await subscription.cancel();
+          _pendingEvents.putIfAbsent(onEvent, () => []);
+          _pendingEvents[onEvent]!.add(completer);
+          await eventHandler();
+        } catch (error, stackTrace) {
+          onError(error, stackTrace);
+        } finally {
+          completer.complete();
+          _pendingEvents[onEvent]!.remove(completer);
+        }
       }
 
-      _pendingEvents.putIfAbsent(onEvent, () => {});
-      final events = () => _pendingEvents[onEvent]!
-          .values
-          .where((e) => !e.isCompleted)
-          .toList(growable: false);
-      onEvent.modifier(event, events, next);
+      _pendingEvents.putIfAbsent(onEvent, () => []);
+      onEvent.modifier(event, _pendingEvents[onEvent]!, next);
     }
   }
 }
-
-void _noop(void _) {}
 
 /// {@template cubit}
 /// A [Cubit] is similar to [Bloc] but has no notion of events
@@ -409,7 +458,7 @@ abstract class BlocBase<State> {
   State get state => _state;
 
   /// The current state stream.
-  Stream<State> get stream => transformStates(_stateController.stream);
+  Stream<State> get stream => _stateController.stream;
 
   /// Updates the [state] to the provided [state].
   /// [emit] does nothing if the instance has been closed or if the
@@ -426,23 +475,6 @@ abstract class BlocBase<State> {
     _stateController.add(_state);
     _emitted = true;
   }
-
-  /// Transforms the `Stream<States>` into a new `Stream<State>`.
-  /// By default [transformStates] returns
-  /// the incoming `Stream<State>`.
-  /// You can override [transformStates] for advanced usage in order to
-  /// manipulate the frequency and specificity at which
-  /// state changes occur.
-  ///
-  /// For example, if you want to debounce outgoing state changes:
-  ///
-  /// ```dart
-  /// @override
-  /// Stream<State> transformStates(Stream<State> states) {
-  ///   return states.debounceTime(const Duration(seconds: 1));
-  /// }
-  /// ```
-  Stream<State> transformStates(Stream<State> states) => states;
 
   /// Called whenever a [change] occurs with the given [change].
   /// A [change] occurs when a new `state` is emitted.

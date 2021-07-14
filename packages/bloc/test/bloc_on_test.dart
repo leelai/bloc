@@ -15,9 +15,9 @@ class TestEventBA extends TestEventB {}
 
 class TestState {}
 
-typedef OnEvent<E, S> = Stream<void> Function(E event, Emit<S> emit);
+typedef OnEvent<E, S> = void Function(E event, Emitter<S> emit);
 
-Stream<void> defaultOnEvent<E, S>(E event, Emit<S> emit) async* {}
+void defaultOnEvent<E, S>(E event, Emitter<S> emit) {}
 
 class TestBloc extends Bloc<TestEvent, TestState> {
   TestBloc({
@@ -82,21 +82,11 @@ void main() {
       var onBACallCount = 0;
 
       final bloc = TestBloc(
-        onTestEvent: (_, __) async* {
-          onEventCallCount++;
-        },
-        onTestEventA: (_, __) async* {
-          onACallCount++;
-        },
-        onTestEventB: (_, __) async* {
-          onBCallCount++;
-        },
-        onTestEventAA: (_, __) async* {
-          onAACallCount++;
-        },
-        onTestEventBA: (_, __) async* {
-          onBACallCount++;
-        },
+        onTestEvent: (_, __) => onEventCallCount++,
+        onTestEventA: (_, __) => onACallCount++,
+        onTestEventB: (_, __) => onBCallCount++,
+        onTestEventAA: (_, __) => onAACallCount++,
+        onTestEventBA: (_, __) => onBACallCount++,
       )..add(TestEventA());
 
       await Future<void>.delayed(Duration.zero);

@@ -819,25 +819,25 @@ void main() {
     });
 
     group('StreamBloc', () {
-      test('cancels subscriptions correctly', () async {
-        final controller = StreamController<int>.broadcast();
-        final states = <int>[];
-        final streamBloc = StreamBloc(controller.stream)
-          ..stream.listen(states.add);
-        final expectedStates = [0, 1];
+      // test('cancels subscriptions correctly', () async {
+      //   final controller = StreamController<int>.broadcast();
+      //   final states = <int>[];
+      //   final streamBloc = StreamBloc(controller.stream)
+      //     ..stream.listen(states.add);
+      //   final expectedStates = [0, 1];
 
-        streamBloc.add(StreamEvent());
-        await Future<void>.delayed(Duration.zero);
-        controller..add(0)..add(1);
+      //   streamBloc.add(StreamEvent());
+      //   await Future<void>.delayed(Duration.zero);
+      //   controller..add(0)..add(1);
 
-        streamBloc.add(StreamEvent());
-        await Future<void>.delayed(Duration.zero);
-        controller..add(0)..add(1);
+      //   streamBloc.add(StreamEvent());
+      //   await Future<void>.delayed(Duration.zero);
+      //   controller..add(0)..add(1);
 
-        await controller.close();
-        await streamBloc.close();
-        expect(states, equals(expectedStates));
-      });
+      //   await controller.close();
+      //   await streamBloc.close();
+      //   expect(states, equals(expectedStates));
+      // });
     });
 
     group('Exception', () {
