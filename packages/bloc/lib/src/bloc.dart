@@ -168,15 +168,16 @@ EventModifier<E> debounceTime<E>(Duration duration) {
 /// **Note**: `throttleTime` is very useful in cases where the rate
 /// of input must be controlled such as type-ahead scenarios.
 EventModifier<E> throttleTime<E>(Duration duration) {
+  late Timer timer;
   return (event, events, next) {
     void callback() {
       for (final e in events) e.cancel();
       next();
-      Timer(duration, callback);
+      timer = Timer(duration, callback);
     }
 
     next();
-    Timer(duration, callback);
+    timer = Timer(duration, callback);
   };
 }
 
@@ -225,11 +226,15 @@ class BlocUnhandledErrorException implements Exception {
 /// {@endtemplate}
 abstract class Bloc<Event, State> extends BlocBase<State> {
   /// {@macro bloc}
-  Bloc(State initialState) : super(initialState);
+  Bloc(State initialState) : super(initialState) {
+    _eventSubscription = _eventController.stream.listen(_onEvent);
+  }
 
   /// The current [BlocObserver] instance.
   static BlocObserver observer = BlocObserver();
 
+  final _eventController = StreamController<Event>.broadcast();
+  late final StreamSubscription<Event> _eventSubscription;
   late final _onEventCallbacks = <_OnEvent<Event, State>>{};
   final _pendingEvents = <dynamic, List<_EventCompleter>>{};
 
@@ -241,7 +246,7 @@ abstract class Bloc<Event, State> extends BlocBase<State> {
     if (isClosed) return;
     try {
       onEvent(event);
-      _onEvent(event);
+      _eventController.add(event);
     } catch (error, stackTrace) {
       onError(error, stackTrace);
     }
@@ -360,6 +365,7 @@ abstract class Bloc<Event, State> extends BlocBase<State> {
       );
     }
 
+    await _eventSubscription.cancel();
     try {
       while (futures().isNotEmpty) await Future.wait<void>(futures());
     } catch (_) {}
@@ -406,7 +412,7 @@ abstract class Bloc<Event, State> extends BlocBase<State> {
       }
 
       _pendingEvents.putIfAbsent(onEvent, () => []);
-      onEvent.modifier(event, _pendingEvents[onEvent]!, next);
+      await onEvent.modifier(event, _pendingEvents[onEvent]!, next);
     }
   }
 }
