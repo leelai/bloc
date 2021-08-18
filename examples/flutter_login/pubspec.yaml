@@ -4,26 +4,35 @@ version: 1.0.0+1
 publish_to: none
 
 environment:
-  sdk: ">=2.12.0-0 <3.0.0"
+    sdk: '>=2.12.0-0 <3.0.0'
 
 dependencies:
-  flutter:
-    sdk: flutter
-  flutter_bloc:
-    path: ../../packages/flutter_bloc
-  formz: ^0.4.0
-  equatable: ^2.0.0
-  authentication_repository:
-    path: packages/authentication_repository
-  user_repository:
-    path: packages/user_repository
+    authentication_repository:
+        path: packages/authentication_repository
+    equatable: ^2.0.0
+    file_picker: ^4.0.0
+    flutter:
+        sdk: flutter
+    flutter_bloc:
+        path: ../../packages/flutter_bloc
+    flutter_mobx: ^2.0.2
+    formz: ^0.4.0
+    mobx: ^2.0.4
+    user_repository:
+        path: packages/user_repository
+    xml: ^5.1.2
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  bloc_test:
-    path: ../../packages/bloc_test
-  mocktail: ^0.1.0
+    bloc_test:
+        path: ../../packages/bloc_test
+    build_runner: ^2.1.1
+    flutter_test:
+        sdk: flutter
+    mobx_codegen: ^2.0.2
+    mocktail: ^0.1.0
 
 flutter:
-  uses-material-design: true
+    uses-material-design: true
+    # To add assets to your application, add an assets section, like this:
+    assets:
+        - assets/images/folder.png
