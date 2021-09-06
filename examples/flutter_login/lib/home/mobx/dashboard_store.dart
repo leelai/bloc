@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:mobx/mobx.dart';
 
@@ -30,13 +32,37 @@ abstract class _ListItemStore with Store {
   String subTitle = '';
 
   @observable
+  String account = '';
+
+  @observable
+  String password = genPw();
+
+  @observable
   bool checked = false;
 
   @action
   void check(bool checkValue) {
-    //print("item checkado - $checkValue");
     checked = checkValue;
   }
+
+  @action
+  void reset() {
+    password = genPw();
+  }
+
+  @computed
+  String get encode =>
+      // ignore: lines_longer_than_80_chars
+      '$account@210.68.245.165 clrtxt:$password ;'; //100023@210.68.245.165 clrtxt:123a ;
+
+  static const _chars =
+      'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
+
+  static String _getRandomString(int length) =>
+      String.fromCharCodes(Iterable.generate(
+          length, (_) => _chars.codeUnitAt(Random().nextInt(_chars.length))));
+
+  static String genPw() => _getRandomString(10);
 }
 
 // abstract class ListItem {
