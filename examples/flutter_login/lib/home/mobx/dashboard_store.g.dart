@@ -88,6 +88,36 @@ mixin _$ListItemStore on _ListItemStore, Store {
     });
   }
 
+  final _$accountAtom = Atom(name: '_ListItemStore.account');
+
+  @override
+  String get account {
+    _$accountAtom.reportRead();
+    return super.account;
+  }
+
+  @override
+  set account(String value) {
+    _$accountAtom.reportWrite(value, super.account, () {
+      super.account = value;
+    });
+  }
+
+  final _$passwordAtom = Atom(name: '_ListItemStore.password');
+
+  @override
+  String get password {
+    _$passwordAtom.reportRead();
+    return super.password;
+  }
+
+  @override
+  set password(String value) {
+    _$passwordAtom.reportWrite(value, super.password, () {
+      super.password = value;
+    });
+  }
+
   final _$checkedAtom = Atom(name: '_ListItemStore.checked');
 
   @override
@@ -118,10 +148,23 @@ mixin _$ListItemStore on _ListItemStore, Store {
   }
 
   @override
+  void reset() {
+    final _$actionInfo = _$_ListItemStoreActionController.startAction(
+        name: '_ListItemStore.reset');
+    try {
+      return super.reset();
+    } finally {
+      _$_ListItemStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
 title: ${title},
 subTitle: ${subTitle},
+account: ${account},
+password: ${password},
 checked: ${checked}
     ''';
   }
