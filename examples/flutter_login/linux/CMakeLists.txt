@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(runner LANGUAGES CXX)
 
-set(BINARY_NAME "flutter_login")
-set(APPLICATION_ID "com.example.flutter_login")
+set(BINARY_NAME "winhome")
+set(APPLICATION_ID "com.example.winhome")
 
 cmake_policy(SET CMP0063 NEW)
 

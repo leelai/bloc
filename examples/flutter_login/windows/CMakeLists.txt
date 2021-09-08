@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
-project(flutter_login LANGUAGES CXX)
+project(winhome LANGUAGES CXX)
 
-set(BINARY_NAME "flutter_login")
+set(BINARY_NAME "winhome")
 
 cmake_policy(SET CMP0063 NEW)
 
