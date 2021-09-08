@@ -197,8 +197,7 @@ class HomePage extends StatelessWidget {
 //100023@210.68.245.165 clrtxt:123a ;
   void _genUserDB(BuildContext context) async {
     var file = File('file.txt');
-    var sink = file.openWrite();
-    // sink.write('FILE ACCESSED ${DateTime.now()}\n');
+    var sink = file.openWrite()..write('version:1\n');
 
     for (var element in dashboardStore.items) {
       //print(element);
