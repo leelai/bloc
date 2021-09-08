@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:mobx/mobx.dart';
 
 part 'dashboard_store.g.dart';
@@ -9,16 +8,20 @@ class DashboardStore = _DashboardStore with _$DashboardStore;
 
 abstract class _DashboardStore with Store {
   @observable
+  String sipPrefix = '';
+
+  @observable
   var items = ObservableList<ListItemStore>();
 
   @action
-  void addItem(ListItemStore item) {
-    items.add(item);
-  }
+  void addItem(ListItemStore item) => items.add(item);
 
   @action
-  void checked(int index, bool value) {
-    items[index].check(value);
+  void checked(int index, bool value) => items[index].check(value);
+
+  @action
+  void changePrefix(String value) {
+    sipPrefix = value;
   }
 }
 
@@ -41,14 +44,10 @@ abstract class _ListItemStore with Store {
   bool checked = false;
 
   @action
-  void check(bool checkValue) {
-    checked = checkValue;
-  }
+  void check(bool checkValue) => checked = checkValue;
 
   @action
-  void reset() {
-    password = genPw();
-  }
+  void reset() => password = genPw();
 
   @computed
   String get encode =>

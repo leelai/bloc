@@ -18,6 +18,7 @@ dependencies:
     flutter_mobx: ^2.0.2
     formz: ^0.4.0
     mobx: ^2.0.4
+    prompt_dialog: ^1.0.5
     qr_flutter: ^4.0.0
     user_repository:
         path: packages/user_repository
@@ -37,3 +38,4 @@ flutter:
     # To add assets to your application, add an assets section, like this:
     assets:
         - assets/images/folder.png
+        - assets/images/editor.png

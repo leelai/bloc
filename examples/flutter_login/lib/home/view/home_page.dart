@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:prompt_dialog/prompt_dialog.dart';
 import 'package:winhome/authentication/authentication.dart';
 import 'package:winhome/home/mobx/dashboard_store.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -62,6 +63,14 @@ class HomePage extends StatelessWidget {
           tooltip: '讀取Addressbook',
           onPressed: () async {
             _loadAddressBookPressed(context);
+          },
+        ),
+        IconButton(
+          // icon: Image.asset('assets/images/folder.png'),
+          icon: const Icon(Icons.edit),
+          tooltip: '編輯案場編號',
+          onPressed: () async {
+            _editPrefix(context);
           },
         ),
         IconButton(
@@ -194,6 +203,13 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  void _editPrefix(BuildContext context) async {
+    var prefix = await prompt(context);
+    if (prefix != null) {
+      dashboardStore.changePrefix(prefix);
+    }
+  }
+
 //100023@210.68.245.165 clrtxt:123a ;
   void _genUserDB(BuildContext context) async {
     var file = File('file.txt');
@@ -201,11 +217,11 @@ class HomePage extends StatelessWidget {
 
     for (var element in dashboardStore.items) {
       //print(element);
-      sink.write('${element.encode}\n');
+      sink.write('${dashboardStore.sipPrefix}${element.encode}\n');
     }
 
     // Close the IOSink to free system resources.
-    sink.close();
+    await sink.close();
 
     print(file.absolute);
   }
@@ -228,7 +244,7 @@ class HomePage extends StatelessWidget {
         document = XmlDocument.parse(bar);
       } else {
         // NOT running on the web! You can check for additional platforms here.
-        var file = File(result.files.single.path!);
+        var file = File(result.files.single.path);
         document = XmlDocument.parse(file.readAsStringSync());
       }
       // final addrlist = document.getElement("AddrList");

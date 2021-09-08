@@ -9,6 +9,21 @@ part of 'dashboard_store.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
 
 mixin _$DashboardStore on _DashboardStore, Store {
+  final _$sipPrefixAtom = Atom(name: '_DashboardStore.sipPrefix');
+
+  @override
+  String get sipPrefix {
+    _$sipPrefixAtom.reportRead();
+    return super.sipPrefix;
+  }
+
+  @override
+  set sipPrefix(String value) {
+    _$sipPrefixAtom.reportWrite(value, super.sipPrefix, () {
+      super.sipPrefix = value;
+    });
+  }
+
   final _$itemsAtom = Atom(name: '_DashboardStore.items');
 
   @override
@@ -50,14 +65,33 @@ mixin _$DashboardStore on _DashboardStore, Store {
   }
 
   @override
+  void changePrefix(String value) {
+    final _$actionInfo = _$_DashboardStoreActionController.startAction(
+        name: '_DashboardStore.changePrefix');
+    try {
+      return super.changePrefix(value);
+    } finally {
+      _$_DashboardStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
+sipPrefix: ${sipPrefix},
 items: ${items}
     ''';
   }
 }
 
 mixin _$ListItemStore on _ListItemStore, Store {
+  Computed<String>? _$encodeComputed;
+
+  @override
+  String get encode => (_$encodeComputed ??=
+          Computed<String>(() => super.encode, name: '_ListItemStore.encode'))
+      .value;
+
   final _$titleAtom = Atom(name: '_ListItemStore.title');
 
   @override
@@ -165,7 +199,8 @@ title: ${title},
 subTitle: ${subTitle},
 account: ${account},
 password: ${password},
-checked: ${checked}
+checked: ${checked},
+encode: ${encode}
     ''';
   }
 }
