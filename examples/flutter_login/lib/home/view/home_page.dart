@@ -10,6 +10,7 @@ import 'package:winhome/authentication/authentication.dart';
 import 'package:winhome/home/mobx/dashboard_store.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:winhome/home/model/qrcode.dart';
 import 'package:xml/xml.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -156,7 +157,8 @@ class HomePage extends StatelessWidget {
                   textStyle: const TextStyle(fontSize: 20),
                 ),
                 onPressed: () {
-                  _showMyDialog(context, item.encode);
+                  _showMyDialog(context, item.account, item.password,
+                      '210.68.245.165:54345');
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(8.0),
@@ -170,8 +172,9 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Future<void> _showMyDialog(BuildContext context, String msg) async {
-    var jsonText = jsonEncode(qrCode);
+  Future<void> _showMyDialog(
+      BuildContext context, String name, String password, String proxy) async {
+    var qrcode = WinhomeQRCode(name, password, proxy);
 
     return showDialog<void>(
       context: context,
@@ -184,7 +187,7 @@ class HomePage extends StatelessWidget {
             height: 280,
             child: Center(
               child: QrImage(
-                data: jsonText,
+                data: qrcode.toString(),
                 version: QrVersions.auto,
                 size: 200.0,
               ),
@@ -284,6 +287,8 @@ class HomePage extends StatelessWidget {
     var addr3 = arr[4];
     return 'c$addr1$addr2$addr3';
   }
+
+  var address = {'大門': '1111', '小門': '2000', '管理員': '3333'};
 
   var qrCode = {
     'name': '40',
