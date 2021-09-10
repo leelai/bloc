@@ -7,3 +7,9 @@ A new Flutter project.
 ```
 flutter test --reporter=expanded test/home/model/qrcode_test.dart
 ```
+
+## Build
+
+```
+flutter build linux --release
+```
