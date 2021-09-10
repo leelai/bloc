@@ -158,7 +158,7 @@ class HomePage extends StatelessWidget {
                 ),
                 onPressed: () {
                   _showMyDialog(context, item.account, item.password,
-                      '210.68.245.165:54345');
+                      '210.68.245.165:54345', dashboardStore.sipPrefix);
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(8.0),
@@ -172,9 +172,9 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Future<void> _showMyDialog(
-      BuildContext context, String name, String password, String proxy) async {
-    var qrcode = WinhomeQRCode(name, password, proxy);
+  Future<void> _showMyDialog(BuildContext context, String name, String password,
+      String proxy, String prefix) async {
+    var qrcode = WinhomeQRCode(name, password, proxy, prefix);
 
     return showDialog<void>(
       context: context,

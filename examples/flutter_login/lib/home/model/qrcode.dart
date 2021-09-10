@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 class WinhomeQRCode {
-  WinhomeQRCode(this._name, this._password, this._proxy);
+  WinhomeQRCode(this._name, this._password, this._proxy, this._prefix);
+  final String _prefix;
   final String _name;
   final String _password;
   final String _proxy;
@@ -12,7 +13,7 @@ class WinhomeQRCode {
   @override
   String toString() {
     var qrCode = {
-      'name': _name,
+      'name': '$_prefix$_name',
       'password': _password,
       'proxy': _proxy,
       'transport': _transport,
