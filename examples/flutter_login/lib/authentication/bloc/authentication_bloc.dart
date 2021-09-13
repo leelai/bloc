@@ -23,7 +23,7 @@ class AuthenticationBloc
 
   final AuthenticationRepository _authenticationRepository;
   final UserRepository _userRepository;
-  late StreamSubscription<AuthenticationStatus>
+  late StreamSubscription<AuthenticationStatusEx>
       _authenticationStatusSubscription;
 
   @override
@@ -47,11 +47,12 @@ class AuthenticationBloc
   Future<AuthenticationState> _mapAuthenticationStatusChangedToState(
     AuthenticationStatusChanged event,
   ) async {
-    switch (event.status) {
+    switch (event.status.status) {
       case AuthenticationStatus.unauthenticated:
         return const AuthenticationState.unauthenticated();
       case AuthenticationStatus.authenticated:
-        final user = await _tryGetUser();
+        final a = event.status as AuthenticationStatusAuthenticated;
+        final user = await _tryGetUser(a.name);
         return user != null
             ? AuthenticationState.authenticated(user)
             : const AuthenticationState.unauthenticated();
@@ -60,9 +61,9 @@ class AuthenticationBloc
     }
   }
 
-  Future<User?> _tryGetUser() async {
+  Future<User?> _tryGetUser(String name) async {
     try {
-      final user = await _userRepository.getUser();
+      final user = await _userRepository.getUser(name);
       return user;
     } on Exception {
       return null;

@@ -49,12 +49,9 @@ class HomePage extends StatelessWidget {
               .add(AuthenticationLogoutRequested());
         },
       ),
-      title: Builder(
-        builder: (context) {
-          final userName = context.select(
-            (AuthenticationBloc bloc) => bloc.state.user.name,
-          );
-          return Text('$userName');
+      title: BlocBuilder<AuthenticationBloc, AuthenticationState>(
+        builder: (context, state) {
+          return Text(state.user.name);
         },
       ),
       actions: [

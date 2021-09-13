@@ -7,7 +7,7 @@ class User extends Equatable {
   final String name;
 
   @override
-  List<Object> get props => [id];
+  List<Object> get props => [id, name];
 
   static const empty = User('-', '');
 }

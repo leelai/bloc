@@ -11,7 +11,7 @@ class MockAuthenticationRepository extends Mock
 class MockUserRepository extends Mock implements UserRepository {}
 
 void main() {
-  const user = User('id');
+  const user = User('id', 'name');
   late AuthenticationRepository authenticationRepository;
   late UserRepository userRepository;
 
