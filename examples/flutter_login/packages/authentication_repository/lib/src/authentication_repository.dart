@@ -2,7 +2,12 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 
-enum AuthenticationStatus { unknown, authenticated, unauthenticated }
+enum AuthenticationStatus {
+  unknown,
+  authenticated,
+  unauthenticated,
+  passwordChanged
+}
 
 abstract class AuthenticationStatusEx extends Equatable {
   const AuthenticationStatusEx(this.status);
@@ -39,6 +44,14 @@ class AuthenticationStatusuUnauthenticated extends AuthenticationStatusEx {
   List<Object> get props => [];
 }
 
+class AuthenticationPasswordChanged extends AuthenticationStatusEx {
+  const AuthenticationPasswordChanged()
+      : super(AuthenticationStatus.passwordChanged);
+
+  @override
+  List<Object> get props => [];
+}
+
 // enum AuthenticationStatus { unknown, authenticated, unauthenticated }
 
 //todo AuthenticationStatus.authenticated with user profile
@@ -56,11 +69,16 @@ class AuthenticationRepository {
     required String password,
   }) async {
     print('logIn $username $password');
-    await Future.delayed(
-      const Duration(milliseconds: 300),
-      () => _controller
-          .add(AuthenticationStatusAuthenticated(username, password)),
-    );
+    if (securityData.containsKey(username) &&
+        securityData[username] == password) {
+      await Future.delayed(const Duration(milliseconds: 300), () {
+        _controller.add(AuthenticationStatusAuthenticated(username, password));
+      });
+    } else {
+      await Future.delayed(const Duration(milliseconds: 300), () {
+        _controller.add(const AuthenticationStatusuUnauthenticated());
+      });
+    }
   }
 
   void logOut() {
@@ -68,4 +86,22 @@ class AuthenticationRepository {
   }
 
   void dispose() => _controller.close();
+
+  var securityData = {
+    '經銷商': '0000',
+    '總幹事': '0000',
+    '保全人員': '0000',
+  };
+  Future<void> changePW({
+    required String username,
+    required String password,
+  }) async {
+    print('changePW $username $password');
+    if (securityData.containsKey(username)) {
+      securityData[username] = password;
+      await Future.delayed(const Duration(milliseconds: 300), () {
+        _controller.add(const AuthenticationPasswordChanged());
+      });
+    }
+  }
 }

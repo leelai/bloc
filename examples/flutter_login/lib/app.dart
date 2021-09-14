@@ -63,6 +63,10 @@ class _AppViewState extends State<AppView> {
                   (route) => false,
                 );
                 break;
+              case AuthenticationStatus.passwordChanged:
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('密碼更改成功!!')));
+                break;
               default:
                 break;
             }

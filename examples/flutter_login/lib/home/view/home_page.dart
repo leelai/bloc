@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:authentication_repository/authentication_repository.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -77,6 +78,13 @@ class HomePage extends StatelessWidget {
           tooltip: '產生user.db',
           onPressed: () async {
             _genUserDB(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.password),
+          tooltip: '修改密碼',
+          onPressed: () async {
+            _changePassword(context);
           },
         ),
       ],
@@ -207,6 +215,15 @@ class HomePage extends StatelessWidget {
     var prefix = await prompt(context);
     if (prefix != null) {
       dashboardStore.changePrefix(prefix);
+    }
+  }
+
+  void _changePassword(BuildContext context) async {
+    var newPassword = await prompt(context);
+    if (newPassword != null) {
+      context
+          .read<AuthenticationBloc>()
+          .add(AuthenticationPasswordChangeRequested(newPassword));
     }
   }
 

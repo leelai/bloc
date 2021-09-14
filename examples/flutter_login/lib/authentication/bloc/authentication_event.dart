@@ -16,3 +16,11 @@ class AuthenticationStatusChanged extends AuthenticationEvent {
 }
 
 class AuthenticationLogoutRequested extends AuthenticationEvent {}
+
+class AuthenticationPasswordChangeRequested extends AuthenticationEvent {
+  const AuthenticationPasswordChangeRequested(this.password);
+
+  final String password;
+  @override
+  List<Object> get props => [password];
+}

@@ -34,6 +34,10 @@ class AuthenticationBloc
       yield await _mapAuthenticationStatusChangedToState(event);
     } else if (event is AuthenticationLogoutRequested) {
       _authenticationRepository.logOut();
+    } else if (event is AuthenticationPasswordChangeRequested) {
+      var newPW = (event).password;
+      await _authenticationRepository.changePW(
+          username: state.user.name, password: newPW);
     }
   }
 
@@ -56,6 +60,8 @@ class AuthenticationBloc
         return user != null
             ? AuthenticationState.authenticated(user)
             : const AuthenticationState.unauthenticated();
+      case AuthenticationStatus.passwordChanged:
+        return AuthenticationState.passwordChanged(state.user);
       default:
         return const AuthenticationState.unknown();
     }
