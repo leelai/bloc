@@ -2,24 +2,69 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:authentication_repository/authentication_repository.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:path/path.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:winhome/authentication/authentication.dart';
 import 'package:winhome/home/mobx/dashboard_store.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:winhome/home/model/qrcode.dart';
+import 'package:winhome/home/model/util.dart';
 import 'package:xml/xml.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 final dashboardStore = DashboardStore();
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   static Route route() {
     return MaterialPageRoute<void>(builder: (_) => HomePage());
+  }
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late final Future<Database> database;
+
+  @override
+  void initState() {
+    // Avoid errors caused by flutter upgrade.
+    WidgetsFlutterBinding.ensureInitialized();
+    loadData();
+    super.initState();
+  }
+
+  void loadData() async {
+    // Open the database and store the reference.
+    database = openDatabase(
+      // Set the path to the database. Note: Using the `join` function from the
+      // `path` package is best practice to ensure the path is correctly
+      // constructed for each platform.
+      join(await getDatabasesPath(), 'wh13_database.db'),
+      // When the database is first created, create a table to store dogs.
+      onCreate: (db, version) {
+        // Run the CREATE TABLE statement on the database.
+        return db.execute(
+          // ignore: lines_longer_than_80_chars
+          'CREATE TABLE items(id INTEGER PRIMARY KEY, ty TEXT, ro TEXT, alias TEXT, ip TEXT, account TEXT, password TEXT, enable TEXT, create_time INTEGER, end_time INTEGER)',
+        );
+      },
+
+      // Set the version. This executes the onCreate function and provides a
+      // path to perform database upgrades and downgrades.
+      version: 1,
+    );
+
+    var items = await whItems();
+    for (var item in items) {
+      dashboardStore.items.add(item);
+    }
   }
 
   @override
@@ -65,7 +110,6 @@ class HomePage extends StatelessWidget {
           },
         ),
         IconButton(
-          // icon: Image.asset('assets/images/folder.png'),
           icon: const Icon(Icons.edit),
           tooltip: '編輯案場編號',
           onPressed: () async {
@@ -73,7 +117,6 @@ class HomePage extends StatelessWidget {
           },
         ),
         IconButton(
-          // icon: Image.asset('assets/images/folder.png'),
           icon: const Icon(Icons.check),
           tooltip: '產生user.db',
           onPressed: () async {
@@ -85,6 +128,22 @@ class HomePage extends StatelessWidget {
           tooltip: '修改密碼',
           onPressed: () async {
             _changePassword(context);
+          },
+        ),
+        Observer(
+          builder: (context) {
+            return Visibility(
+              child: IconButton(
+                icon: const Icon(Icons.money),
+                tooltip: '修改設定',
+                onPressed: () async {
+                  //_changePassword(context);
+                  await saveAllWHItems();
+                  dashboardStore.resetDirty();
+                },
+              ),
+              visible: dashboardStore.dirty,
+            );
           },
         ),
       ],
@@ -120,10 +179,48 @@ class HomePage extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(item.account),
-            // Container(width: 20, height: 20),
-            Text(item.password),
-            // const Spacer(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('帳號：${item.account}'),
+                Text('密碼：${item.password}'),
+              ],
+            ),
+            Column(
+              children: [
+                Text('建立時間：${item.createTimeStr}'),
+                InkWell(
+                  onTap: () {
+                    DatePicker.showDatePicker(context,
+                        showTitleActions: true,
+                        minTime: DateTime.now(),
+                        // maxTime: DateTime(2019, 6, 7),
+                        theme: const DatePickerTheme(
+                          headerColor: Colors.orange,
+                          backgroundColor: Colors.blue,
+                          itemStyle: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 30,
+                          ),
+                          doneStyle: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ), onConfirm: (date) {
+                      dashboardStore.markDirty();
+                      item.setEndTime(date);
+                    }, currentTime: DateTime.now(), locale: LocaleType.tw);
+                  },
+                  child: Text(
+                    '結束時間：${item.endTimeStr}',
+                    style: const TextStyle(
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             Card(
               child: TextButton(
                 style: TextButton.styleFrom(
@@ -131,6 +228,7 @@ class HomePage extends StatelessWidget {
                 ),
                 onPressed: () {
                   item.check(!item.checked);
+                  dashboardStore.markDirty();
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -227,9 +325,8 @@ class HomePage extends StatelessWidget {
     }
   }
 
-//100023@210.68.245.165 clrtxt:123a ;
   void _genUserDB(BuildContext context) async {
-    var file = File('file.txt');
+    var file = File('user.db');
     var sink = file.openWrite()..write('version:1\n');
 
     for (var element in dashboardStore.items) {
@@ -261,7 +358,7 @@ class HomePage extends StatelessWidget {
         document = XmlDocument.parse(bar);
       } else {
         // NOT running on the web! You can check for additional platforms here.
-        var file = File(result.files.single.path);
+        var file = File(result.files.single.path.toString());
         document = XmlDocument.parse(file.readAsStringSync());
       }
       // final addrlist = document.getElement("AddrList");
@@ -271,15 +368,26 @@ class HomePage extends StatelessWidget {
             (a, b) => a.getAttribute('ro')!.compareTo(b.getAttribute('ro')!));
       // print(devs.toString());
       var ty4 = newlist.where((dev) => (dev.getAttribute('ty') == '7'));
+      var i = 0;
+      var today = DateTime.now();
+      var end = today.add(const Duration(days: 365));
       for (var element in ty4) {
-        print(element); //alias
-        var alias = element.getAttribute('alias') as String;
-        var ro = element.getAttribute('ro') as String;
-        final listItemStore = ListItemStore()
-          ..account = _roToAcc(ro)
-          ..title = alias
-          ..subTitle = _roToAcc(ro);
-        dashboardStore.items.add(listItemStore);
+        var whItem = ListItemStore()
+          ..id = i++
+          ..ty = '7'
+          ..ro = element.getAttribute('ro') as String
+          ..title = element.getAttribute('alias') as String
+          ..ip = element.getAttribute('ip') as String
+          ..checked = true
+          ..account = _roToAcc(element.getAttribute('ro') as String)
+          ..password = Util.genPw()
+          ..createTime = today.millisecondsSinceEpoch
+          ..endTime = end.millisecondsSinceEpoch;
+
+        // print(whItem);
+        dashboardStore.items.add(whItem);
+        // ignore: unawaited_futures
+        insertWHItem(whItem);
       }
       // print(document.toXmlString(pretty: true, indent: '\t'));
     } else {
@@ -302,14 +410,79 @@ class HomePage extends StatelessWidget {
     return 'c$addr1$addr2$addr3';
   }
 
-  var address = {'大門': '1111', '小門': '2000', '管理員': '3333'};
+  // A method that retrieves all the dogs from the dogs table.
+  // Future<List<WHItem>> whItems() async {
+  Future<List<ListItemStore>> whItems() async {
+    // Get a reference to the database.
+    final db = await database;
 
-  var qrCode = {
-    'name': '40',
-    'password': '4000',
-    'proxy': '210.68.245.165:54345',
-    'transport': 'tls',
-    'callOut': {'管理員': '2000'},
-    'address': {'大門': '1111', '小門': '2000', '管理員': '3333'},
-  };
+    // Query the table for all The Dogs.
+    final List<Map<String, dynamic>> maps = await db.query('items');
+
+    return List.generate(maps.length, (i) {
+      return ListItemStore()
+        ..id = maps[i]['id'] as int
+        ..ip = maps[i]['ip'] as String
+        ..ro = maps[i]['ro'] as String
+        ..ty = maps[i]['ty'] as String
+        ..checked = maps[i]['enable'] as String == 'true'
+        ..title = maps[i]['alias'] as String
+        ..subTitle = maps[i]['alias'] as String
+        ..account = maps[i]['account'] as String
+        ..password = maps[i]['password'] as String
+        ..createTime = maps[i]['create_time'] as int
+        ..endTime = maps[i]['end_time'] as int;
+    });
+  }
+
+  // Define a function that inserts WHItems into the database
+  Future<void> insertWHItem(ListItemStore item) async {
+    // Get a reference to the database.
+    final db = await database;
+
+    // Insert the WHItem into the correct table. You might also specify the
+    // `conflictAlgorithm` to use in case the same dog is inserted twice.
+    //
+    // In this case, replace any previous data.
+    await db.insert(
+      'items',
+      item.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateWHItem(ListItemStore item) async {
+    // Get a reference to the database.
+    final db = await database;
+
+    // Update the given WHItem.
+    await db.update(
+      'items',
+      item.toMap(),
+      // Ensure that the WHItem has a matching id.
+      where: 'id = ?',
+      // Pass the WHItem's id as a whereArg to prevent SQL injection.
+      whereArgs: [item.id],
+    );
+  }
+
+  Future<void> deleteWHItem(int id) async {
+    // Get a reference to the database.
+    final db = await database;
+
+    // Remove the Dog from the database.
+    await db.delete(
+      'items',
+      // Use a `where` clause to delete a specific dog.
+      where: 'id = ?',
+      // Pass the Dog's id as a whereArg to prevent SQL injection.
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> saveAllWHItems() async {
+    for (var item in dashboardStore.items) {
+      await updateWHItem(item);
+    }
+  }
 }

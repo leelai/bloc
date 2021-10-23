@@ -1,6 +1,6 @@
-import 'dart:math';
-
 import 'package:mobx/mobx.dart';
+import 'package:winhome/home/model/util.dart';
+import 'package:intl/intl.dart';
 
 part 'dashboard_store.g.dart';
 
@@ -11,7 +11,13 @@ abstract class _DashboardStore with Store {
   String sipPrefix = '';
 
   @observable
+  var dirty = false;
+
+  @observable
   var items = ObservableList<ListItemStore>();
+
+  @observable
+  var items2 = ObservableList<ListItemStore>(); //小門口 大門口
 
   @action
   void addItem(ListItemStore item) => items.add(item);
@@ -23,11 +29,26 @@ abstract class _DashboardStore with Store {
   void changePrefix(String value) {
     sipPrefix = value;
   }
+
+  @action
+  void markDirty() {
+    dirty = true;
+  }
+
+  @action
+  void resetDirty() {
+    dirty = false;
+  }
 }
 
 class ListItemStore = _ListItemStore with _$ListItemStore;
 
 abstract class _ListItemStore with Store {
+  int id = 0;
+  String ro = '';
+  String ip = '';
+  String ty = '';
+
   @observable
   String title = '';
 
@@ -38,7 +59,18 @@ abstract class _ListItemStore with Store {
   String account = '';
 
   @observable
-  String password = genPw();
+  String password = '';
+
+  @observable
+  int createTime = 0;
+
+  @observable
+  int endTime = 0;
+
+  @action
+  void setEndTime(DateTime endTime) {
+    this.endTime = endTime.millisecondsSinceEpoch;
+  }
 
   @observable
   bool checked = false;
@@ -47,41 +79,41 @@ abstract class _ListItemStore with Store {
   void check(bool checkValue) => checked = checkValue;
 
   @action
-  void reset() => password = genPw();
+  void reset() => password = Util.genPw();
 
   @computed
   String get encode =>
       // ignore: lines_longer_than_80_chars
       '$account@210.68.245.165 clrtxt:$password ;'; //100023@210.68.245.165 clrtxt:123a ;
 
-  static const _chars =
-      'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
+  @computed
+  String get createTimeStr {
+    var date = DateTime.fromMillisecondsSinceEpoch(createTime);
+    return DateFormat('yyyy-MM-dd').format(date);
+  }
 
-  static String _getRandomString(int length) =>
-      String.fromCharCodes(Iterable.generate(
-          length, (_) => _chars.codeUnitAt(Random().nextInt(_chars.length))));
+  @computed
+  String get endTimeStr {
+    var date = DateTime.fromMillisecondsSinceEpoch(endTime);
+    return DateFormat('yyyy-MM-dd').format(date);
+  }
 
-  static String genPw() => _getRandomString(10);
+  Map<String, dynamic> toMap() => <String, dynamic>{
+        'id': id,
+        'ty': ty,
+        'ro': ro,
+        'alias': title,
+        'ip': ip,
+        'account': account,
+        'password': password,
+        'enable': checked ? 'true' : 'false',
+        'create_time': createTime,
+        'end_time': endTime,
+      };
+
+  @override
+  String toString() {
+    // ignore: lines_longer_than_80_chars
+    return 'WHItem{id: $id, ty: $ty, ro: $ro, alias: $title, ip: $ip, account: $account, password : $password, enable: $checked, create_time: $createTime, end_time: $endTime}';
+  }
 }
-
-// abstract class ListItem {
-//   /// The title line to show in a list item.
-//   Widget buildTitle(BuildContext context);
-
-//   /// The subtitle line, if any, to show in a list item.
-//   Widget buildSubtitle(BuildContext context);
-// }
-
-// /// A ListItem that contains data to display a message.
-// class MessageItem implements ListItem {
-//   final String sender;
-//   final String body;
-
-//   MessageItem(this.sender, this.body);
-
-//   @override
-//   Widget buildTitle(BuildContext context) => Text(sender);
-
-//   @override
-//   Widget buildSubtitle(BuildContext context) => Text(body);
-// }

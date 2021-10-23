@@ -31,6 +31,7 @@ class AuthenticationBloc
     AuthenticationEvent event,
   ) async* {
     if (event is AuthenticationStatusChanged) {
+      //from auth repo
       yield await _mapAuthenticationStatusChangedToState(event);
     } else if (event is AuthenticationLogoutRequested) {
       _authenticationRepository.logOut();
@@ -51,6 +52,7 @@ class AuthenticationBloc
   Future<AuthenticationState> _mapAuthenticationStatusChangedToState(
     AuthenticationStatusChanged event,
   ) async {
+    print('_mapAuthenticationStatusChangedToState $event');
     switch (event.status.status) {
       case AuthenticationStatus.unauthenticated:
         return const AuthenticationState.unauthenticated();
