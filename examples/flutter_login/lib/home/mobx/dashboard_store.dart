@@ -1,6 +1,6 @@
+import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
 import 'package:winhome/home/model/util.dart';
-import 'package:intl/intl.dart';
 
 part 'dashboard_store.g.dart';
 
