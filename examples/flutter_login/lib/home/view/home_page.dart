@@ -239,26 +239,31 @@ class _HomePageState extends State<HomePage> {
                 Text('建立時間：${item.createTimeStr}'),
                 InkWell(
                   onTap: () {
-                    DatePicker.showDatePicker(context,
-                        showTitleActions: true,
-                        minTime: DateTime.now(),
-                        // maxTime: DateTime(2019, 6, 7),
-                        theme: const DatePickerTheme(
-                          headerColor: Colors.orange,
-                          backgroundColor: Colors.blue,
-                          itemStyle: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 30,
-                          ),
-                          doneStyle: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ), onConfirm: (date) {
-                      dashboardStore.markDirty();
-                      item.setEndTime(date);
-                    }, currentTime: DateTime.now(), locale: LocaleType.tw);
+                    DatePicker.showDatePicker(
+                      context,
+                      // showTitleActions: true,
+                      minTime: DateTime.now(),
+                      // maxTime: DateTime(2019, 6, 7),
+                      // theme: const DatePickerTheme(
+                      //   headerColor: Colors.orange,
+                      //   backgroundColor: Colors.blue,
+                      //   itemStyle: TextStyle(
+                      //     color: Colors.white,
+                      //     fontWeight: FontWeight.bold,
+                      //     fontSize: 30,
+                      //   ),
+                      //   doneStyle: TextStyle(
+                      //     color: Colors.white,
+                      //     fontSize: 16,
+                      //   ),
+                      // ),
+                      // onConfirm: (date) {
+                      //   dashboardStore.markDirty();
+                      //   item.setEndTime(date);
+                      // },
+                      currentTime: DateTime.now(),
+                      locale: LocaleType.en,
+                    );
                   },
                   child: Text(
                     '結束時間：${item.endTimeStr}',
