@@ -95,7 +95,11 @@ abstract class _ListItemStore with Store {
   @computed
   String get endTimeStr {
     var date = DateTime.fromMillisecondsSinceEpoch(endTime);
-    return DateFormat('yyyy-MM-dd').format(date);
+    var dateStr = DateFormat('yyyy-MM-dd').format(date);
+    if (isExpired) {
+      dateStr += '(已過期)';
+    }
+    return dateStr;
   }
 
   @computed
