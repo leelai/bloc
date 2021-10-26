@@ -15,7 +15,6 @@ import 'package:prompt_dialog/prompt_dialog.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:winhome/authentication/authentication.dart';
-import 'package:winhome/home/home.dart';
 import 'package:winhome/home/mobx/dashboard_store.dart';
 import 'package:winhome/home/model/qrcode.dart';
 import 'package:winhome/home/model/util.dart';
@@ -275,9 +274,6 @@ class _HomePageState extends State<HomePage> {
             ),
             Card(
               child: TextButton(
-                style: TextButton.styleFrom(
-                  textStyle: const TextStyle(fontSize: fontSize),
-                ),
                 onPressed: () {
                   item.enable(!item.enabled);
                   dashboardStore.markDirty();
@@ -298,9 +294,6 @@ class _HomePageState extends State<HomePage> {
             // const Spacer(),
             Card(
               child: TextButton(
-                style: TextButton.styleFrom(
-                  textStyle: const TextStyle(fontSize: fontSize),
-                ),
                 onPressed: () {
                   if (item.enabled) {
                     item.reset();
@@ -321,9 +314,6 @@ class _HomePageState extends State<HomePage> {
             // const Spacer(),
             Card(
               child: TextButton(
-                style: TextButton.styleFrom(
-                  textStyle: const TextStyle(fontSize: fontSize),
-                ),
                 onPressed: () {
                   if (item.isValid) {
                     _showMyDialog(context, item.account, item.password,
@@ -357,7 +347,10 @@ class _HomePageState extends State<HomePage> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('請打開app掃描'),
+          title: const Text(
+            '請打開app掃描',
+            style: TextStyle(fontSize: fontSize),
+          ),
           content: Container(
             width: 280,
             height: 280,

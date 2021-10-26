@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:formz/formz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:winhome/authentication/authentication.dart';
+import 'package:winhome/home/view/home_page.dart';
 import 'package:winhome/login/login.dart';
 
 class LoginForm extends StatelessWidget {
@@ -71,9 +72,10 @@ class _PasswordInput extends StatelessWidget {
               context.read<LoginBloc>().add(LoginPasswordChanged(password)),
           obscureText: true,
           decoration: InputDecoration(
-            labelText: 'password',
+            labelText: '密碼',
             errorText: state.password.invalid ? 'invalid password' : null,
           ),
+          style: const TextStyle(fontSize: fontSize),
         );
       },
     );
@@ -106,7 +108,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
           icon: const Icon(Icons.arrow_downward),
           iconSize: 24,
           elevation: 16,
-          style: const TextStyle(color: Colors.deepPurple),
+          // style: const TextStyle(color: Colors.deepPurple),
           underline: Container(
             height: 2,
             color: Colors.deepPurpleAccent,
@@ -117,13 +119,19 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
             //   dropdownValue = newValue;
             // });
           },
-          items: <String>['經銷商', '總幹事', '保全人員']
-              .map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
+          items: <String>['經銷商', '總幹事', '保全人員'].map<DropdownMenuItem<String>>(
+            (String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: fontSize,
+                  ),
+                ),
+              );
+            },
+          ).toList(),
         );
       },
     );
@@ -140,7 +148,7 @@ class _LoginButton extends StatelessWidget {
             ? const CircularProgressIndicator()
             : ElevatedButton(
                 key: const Key('loginForm_continue_raisedButton'),
-                child: const Text('Login'),
+                child: const Text('登入', style: TextStyle(fontSize: fontSize)),
                 onPressed: state.status.isValidated
                     ? () {
                         context.read<LoginBloc>().add(const LoginSubmitted());
