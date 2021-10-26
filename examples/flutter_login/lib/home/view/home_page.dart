@@ -8,19 +8,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:ini/ini.dart';
 import 'package:logger/logger.dart';
-import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:winhome/authentication/authentication.dart';
-import 'package:winhome/database/database.dart';
+import 'package:winhome/home/home.dart';
 import 'package:winhome/home/mobx/dashboard_store.dart';
 import 'package:winhome/home/model/qrcode.dart';
 import 'package:winhome/home/model/util.dart';
 import 'package:xml/xml.dart';
 
 final dashboardStore = DashboardStore();
+
+const fontSize = 18.0;
+const enableColor = Color(0xFF73ACCE);
+const disableColor = Color(0xFF9E9E9E);
+const enableButtonTextColor = Color(0xFF73ACCE);
+const disableButtonTextColor = Color(0xFF9E9E9E);
+
 var logger = Logger(
   printer: PrettyPrinter(),
 );
@@ -36,7 +44,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late final Future<Database> database;
-  var myDB = AppDatabase();
+  // var myDB = AppDatabase();
 
   @override
   void initState() {
@@ -47,55 +55,62 @@ class _HomePageState extends State<HomePage> {
   }
 
   void loadData() async {
-    // Open the database and store the reference.
-    // database = openDatabase(
-    //   // Set the path to the database. Note: Using the `join` function from the
-    //   // `path` package is best practice to ensure the path is correctly
-    //   // constructed for each platform.
-    //   join(await getDatabasesPath(), 'wh13_database.db'),
-    //   // When the database is first created, create a table to store dogs.
-    //   onCreate: (db, version) {
-    //     // Run the CREATE TABLE statement on the database.
-    //     return db.execute(
-    //       // ignore: lines_longer_than_80_chars
-    //       'CREATE TABLE items(id INTEGER PRIMARY KEY, ty TEXT, ro TEXT, alias TEXT, ip TEXT, account TEXT, password TEXT, enable TEXT, create_time INTEGER, end_time INTEGER)',
-    //     );
-    //   },
+    var fileName = 'addressbook.ini';
+    var dir = (await getApplicationDocumentsDirectory()).path;
+    var configFile = '$dir/$fileName';
 
-    //   // Set the version. This executes the onCreate function and provides a
-    //   // path to perform database upgrades and downgrades.
-    //   version: 1,
-    // );
+    var directoryExists = await Directory(configFile).exists();
+    var fileExists = await File(configFile).exists();
 
-    // var items = await whItems();
-    // for (var item in items) {
-    //   dashboardStore.items.add(item);
-    // }
+    if (directoryExists || fileExists) {
+      // var file = File(configFile);
+      // await file.delete();
+      var config = await File(configFile)
+          .readAsLines()
+          .then((lines) => Config.fromStrings(lines));
 
-    //test
-    load2();
+      var sections = config.sections();
+      var i = 0;
+      for (var section in sections) {
+        //logger.d(section);
+        var whItem = ListItemStore()
+          ..id = i++
+          ..ty = config.get(section, 'ty')!
+          ..ro = config.get(section, 'ro')!
+          ..title = config.get(section, 'alias')!
+          ..ip = config.get(section, 'ip')!
+          ..enabled = config.get(section, 'enable')! == 'true'
+          ..account = config.get(section, 'account')!
+          ..password = config.get(section, 'password')!
+          ..createTime = int.parse(config.get(section, 'createTime')!)
+          ..endTime = int.parse(config.get(section, 'expiredTime')!);
+
+        dashboardStore.items.add(whItem);
+      }
+    }
+    // load2();
   }
 
   void load2() {
-    var db = AppDatabase();
-    db.getAllAddressItems().then((value) {
-      // logger.v('$value');
-      for (var item in value) {
-        var _item = ListItemStore()
-          ..id = item.id
-          ..ty = item.ty
-          ..ro = item.ro
-          ..title = item.alias
-          ..ip = item.ip
-          ..checked = item.enable
-          ..account = item.account
-          ..password = item.password
-          ..createTime = item.createDate!.millisecondsSinceEpoch
-          ..endTime = item.expiredDate!.millisecondsSinceEpoch;
+    // var db = AppDatabase();
+    // db.getAllAddressItems().then((value) {
+    //   // logger.v('$value');
+    //   for (var item in value) {
+    //     var _item = ListItemStore()
+    //       ..id = item.id
+    //       ..ty = item.ty
+    //       ..ro = item.ro
+    //       ..title = item.alias
+    //       ..ip = item.ip
+    //       ..checked = item.enable
+    //       ..account = item.account
+    //       ..password = item.password
+    //       ..createTime = item.createDate!.millisecondsSinceEpoch
+    //       ..endTime = item.expiredDate!.millisecondsSinceEpoch;
 
-        dashboardStore.items.add(_item);
-      }
-    });
+    //     dashboardStore.items.add(_item);
+    //   }
+    // });
   }
 
   @override
@@ -188,7 +203,10 @@ class _HomePageState extends State<HomePage> {
       itemBuilder: (context, index) {
         final item = dashboardStore.items[index];
         return ListTile(
-          title: Text(item.title),
+          title: Text(
+            item.title,
+            style: const TextStyle(fontSize: fontSize),
+          ),
           subtitle: Observer(
             builder: (BuildContext context) {
               return _listViewSub(item, context);
@@ -204,7 +222,7 @@ class _HomePageState extends State<HomePage> {
   Widget _listViewSub(ListItemStore item, BuildContext context) {
     return Container(
       alignment: Alignment.centerLeft,
-      color: Colors.grey,
+      color: item.isValid ? enableColor : disableColor,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -245,8 +263,11 @@ class _HomePageState extends State<HomePage> {
                   },
                   child: Text(
                     '結束時間：${item.endTimeStr}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       decoration: TextDecoration.underline,
+                      color: item.isExpired
+                          ? const Color(0xFFC74A4A)
+                          : const Color(0xFF464646),
                     ),
                   ),
                 ),
@@ -255,17 +276,45 @@ class _HomePageState extends State<HomePage> {
             Card(
               child: TextButton(
                 style: TextButton.styleFrom(
-                  textStyle: const TextStyle(fontSize: 20),
+                  textStyle: const TextStyle(fontSize: fontSize),
                 ),
                 onPressed: () {
-                  item.check(!item.checked);
+                  item.enable(!item.enabled);
                   dashboardStore.markDirty();
                 },
                 child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: item.enabled
+                        ? const Text(
+                            '暫停',
+                            style: TextStyle(color: enableButtonTextColor),
+                          )
+                        : const Text(
+                            '啟用',
+                            style: TextStyle(color: enableButtonTextColor),
+                          )),
+              ),
+            ),
+            // const Spacer(),
+            Card(
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: const TextStyle(fontSize: fontSize),
+                ),
+                onPressed: () {
+                  if (item.enabled) {
+                    item.reset();
+                  }
+                },
+                child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: item.checked == true
-                      ? const Text('啟用')
-                      : const Text('暫停'),
+                  child: Text(
+                    '重置密碼',
+                    style: TextStyle(
+                        color: item.isValid
+                            ? enableButtonTextColor
+                            : disableButtonTextColor),
+                  ),
                 ),
               ),
             ),
@@ -273,30 +322,23 @@ class _HomePageState extends State<HomePage> {
             Card(
               child: TextButton(
                 style: TextButton.styleFrom(
-                  textStyle: const TextStyle(fontSize: 20),
+                  textStyle: const TextStyle(fontSize: fontSize),
                 ),
                 onPressed: () {
-                  item.reset();
+                  if (item.isValid) {
+                    _showMyDialog(context, item.account, item.password,
+                        '210.68.245.165:54345', dashboardStore.sipPrefix);
+                  }
                 },
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text('重置密碼'),
-                ),
-              ),
-            ),
-            // const Spacer(),
-            Card(
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  textStyle: const TextStyle(fontSize: 20),
-                ),
-                onPressed: () {
-                  _showMyDialog(context, item.account, item.password,
-                      '210.68.245.165:54345', dashboardStore.sipPrefix);
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text('顯示QR碼'),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    '顯示QR碼',
+                    style: TextStyle(
+                        color: item.isValid
+                            ? enableButtonTextColor
+                            : disableButtonTextColor),
+                  ),
                 ),
               ),
             ),
@@ -329,7 +371,10 @@ class _HomePageState extends State<HomePage> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('關閉'),
+              child: const Text(
+                '關閉',
+                style: TextStyle(fontSize: fontSize),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -362,7 +407,9 @@ class _HomePageState extends State<HomePage> {
 
     for (var element in dashboardStore.items) {
       //print(element);
-      sink.write('${dashboardStore.sipPrefix}${element.encode}\n');
+      if (element.enabled) {
+        sink.write('${dashboardStore.sipPrefix}${element.encode}\n');
+      }
     }
 
     // Close the IOSink to free system resources.
@@ -403,6 +450,22 @@ class _HomePageState extends State<HomePage> {
       var today = DateTime.now();
       var end = today.add(const Duration(days: 365));
 
+      var fileName = 'addressbook.ini';
+      var dir = (await getApplicationDocumentsDirectory()).path;
+      var configFile = '$dir/$fileName';
+
+      var directoryExists = await Directory(configFile).exists();
+      var fileExists = await File(configFile).exists();
+
+      var config = Config();
+      if (directoryExists || fileExists) {
+        var file = File(configFile);
+        await file.delete();
+      }
+      //   new File("config.ini").readAsLines()
+      // .then((lines) => new Config.fromStrings(lines))
+      // .then((Config config) => ...);
+
       // var myDB = AppDatabase();
       for (var element in ty7) {
         var whItem = ListItemStore()
@@ -411,7 +474,7 @@ class _HomePageState extends State<HomePage> {
           ..ro = element.getAttribute('ro') as String
           ..title = element.getAttribute('alias') as String
           ..ip = element.getAttribute('ip') as String
-          ..checked = true
+          ..enabled = true
           ..account = _roToAcc(element.getAttribute('ro') as String)
           ..password = Util.genPw()
           ..createTime = today.millisecondsSinceEpoch
@@ -421,30 +484,44 @@ class _HomePageState extends State<HomePage> {
         // ignore: unawaited_futures
         // insertWHItem(whItem);
 
-        await myDB.insertAddressItem(_foo(whItem));
+        // await myDB.insertAddressItem(_foo(whItem));
+        config
+          ..addSection(whItem.ro)
+          ..set(whItem.ro, 'ty', whItem.ty)
+          ..set(whItem.ro, 'alias', whItem.title)
+          ..set(whItem.ro, 'ro', whItem.ro)
+          ..set(whItem.ro, 'ip', whItem.ip)
+          ..set(whItem.ro, 'enable', whItem.enabled.toString())
+          ..set(whItem.ro, 'account', whItem.account)
+          ..set(whItem.ro, 'password', whItem.password)
+          ..set(whItem.ro, 'createTime', whItem.createTime.toString())
+          ..set(whItem.ro, 'expiredTime', whItem.endTime.toString());
       }
+      var file = File(configFile);
+      await file.writeAsString(config.toString());
+
+      logger.d(configFile);
+      logger.d(config.toString());
       // print(document.toXmlString(pretty: true, indent: '\t'));
-    } else {
-      // User canceled the picker
     }
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('讀取Addressbook')));
   }
 
-  AddressItem _foo(ListItemStore storeItem) {
-    return AddressItem(
-      id: storeItem.id,
-      ty: storeItem.ty,
-      ro: storeItem.ro,
-      alias: storeItem.title,
-      ip: storeItem.ip,
-      account: storeItem.account,
-      password: storeItem.password,
-      enable: storeItem.checked,
-      createDate: DateTime.fromMillisecondsSinceEpoch(storeItem.createTime),
-      expiredDate: DateTime.fromMillisecondsSinceEpoch(storeItem.endTime),
-    );
-  }
+  // AddressItem _foo(ListItemStore storeItem) {
+  //   return AddressItem(
+  //     id: storeItem.id,
+  //     ty: storeItem.ty,
+  //     ro: storeItem.ro,
+  //     alias: storeItem.title,
+  //     ip: storeItem.ip,
+  //     account: storeItem.account,
+  //     password: storeItem.password,
+  //     enable: storeItem.checked,
+  //     createDate: DateTime.fromMillisecondsSinceEpoch(storeItem.createTime),
+  //     expiredDate: DateTime.fromMillisecondsSinceEpoch(storeItem.endTime),
+  //   );
+  // }
 
   String _roToAcc(String ro) {
     var arr = ro.split('-'); //var one = int.parse('1');
@@ -459,105 +536,35 @@ class _HomePageState extends State<HomePage> {
     return 'c$addr1$addr2$addr3';
   }
 
-  // A method that retrieves all the dogs from the dogs table.
-  // Future<List<WHItem>> whItems() async {
-  // Future<List<ListItemStore>> whItems() async {
-  //   // Get a reference to the database.
-  //   final db = await database;
-
-  //   // Query the table for all The Dogs.
-  //   final List<Map<String, dynamic>> maps = await db.query('items');
-
-  //   return List.generate(maps.length, (i) {
-  //     return ListItemStore()
-  //       ..id = maps[i]['id'] as int
-  //       ..ip = maps[i]['ip'] as String
-  //       ..ro = maps[i]['ro'] as String
-  //       ..ty = maps[i]['ty'] as String
-  //       ..checked = maps[i]['enable'] as String == 'true'
-  //       ..title = maps[i]['alias'] as String
-  //       ..subTitle = maps[i]['alias'] as String
-  //       ..account = maps[i]['account'] as String
-  //       ..password = maps[i]['password'] as String
-  //       ..createTime = maps[i]['create_time'] as int
-  //       ..endTime = maps[i]['end_time'] as int;
-  //   });
-  // }
-
-  // Future<List<ListItemStore>> whItemsValid() async {
-  //   // Get a reference to the database.
-  //   final db = await database;
-
-  //   final List<Map<String, dynamic>> maps = await db.query('items',
-  //       where: 'end_time > ?',
-  //       whereArgs: [DateTime.now().millisecondsSinceEpoch]);
-
-  //   return List.generate(maps.length, (i) {
-  //     return ListItemStore()
-  //       ..id = maps[i]['id'] as int
-  //       ..ip = maps[i]['ip'] as String
-  //       ..ro = maps[i]['ro'] as String
-  //       ..ty = maps[i]['ty'] as String
-  //       ..checked = maps[i]['enable'] as String == 'true'
-  //       ..title = maps[i]['alias'] as String
-  //       ..subTitle = maps[i]['alias'] as String
-  //       ..account = maps[i]['account'] as String
-  //       ..password = maps[i]['password'] as String
-  //       ..createTime = maps[i]['create_time'] as int
-  //       ..endTime = maps[i]['end_time'] as int;
-  //   });
-  // }
-
-  // Define a function that inserts WHItems into the database
-  // Future<void> insertWHItem(ListItemStore item) async {
-  //   // Get a reference to the database.
-  //   final db = await database;
-
-  //   // Insert the WHItem into the correct table. You might also specify the
-  //   // `conflictAlgorithm` to use in case the same dog is inserted twice.
-  //   //
-  //   // In this case, replace any previous data.
-  //   await db.insert(
-  //     'items',
-  //     item.toMap(),
-  //     conflictAlgorithm: ConflictAlgorithm.replace,
-  //   );
-  // }
-
-  // Future<void> updateWHItem(ListItemStore item) async {
-  //   // Get a reference to the database.
-  //   final db = await database;
-
-  //   // Update the given WHItem.
-  //   await db.update(
-  //     'items',
-  //     item.toMap(),
-  //     // Ensure that the WHItem has a matching id.
-  //     where: 'id = ?',
-  //     // Pass the WHItem's id as a whereArg to prevent SQL injection.
-  //     whereArgs: [item.id],
-  //   );
-  // }
-
-  // Future<void> deleteWHItem(int id) async {
-  //   // Get a reference to the database.
-  //   final db = await database;
-
-  //   // Remove the Dog from the database.
-  //   await db.delete(
-  //     'items',
-  //     // Use a `where` clause to delete a specific dog.
-  //     where: 'id = ?',
-  //     // Pass the Dog's id as a whereArg to prevent SQL injection.
-  //     whereArgs: [id],
-  //   );
-  // }
-
   Future<void> saveAllWHItems() async {
+    var config = Config();
     for (var item in dashboardStore.items) {
-      await myDB.updateAddressItem(_foo(item));
-      // dashboardStore.items(_foo(item));
-      // await updateWHItem(_foo(item));
+      config
+        ..addSection(item.ro)
+        ..set(item.ro, 'ty', item.ty)
+        ..set(item.ro, 'alias', item.title)
+        ..set(item.ro, 'ip', item.ip)
+        ..set(item.ro, 'ro', item.ro)
+        ..set(item.ro, 'enable', item.enabled.toString())
+        ..set(item.ro, 'account', item.account)
+        ..set(item.ro, 'password', item.password)
+        ..set(item.ro, 'createTime', item.createTime.toString())
+        ..set(item.ro, 'expiredTime', item.endTime.toString());
     }
+
+    var fileName = 'addressbook.ini';
+    var dir = (await getApplicationDocumentsDirectory()).path;
+    var configFile = '$dir/$fileName';
+
+    var directoryExists = await Directory(configFile).exists();
+    var fileExists = await File(configFile).exists();
+
+    if (directoryExists || fileExists) {
+      var file = File(configFile);
+      await file.delete();
+    }
+
+    var file = File(configFile);
+    await file.writeAsString(config.toString());
   }
 }

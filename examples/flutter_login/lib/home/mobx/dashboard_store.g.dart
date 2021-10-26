@@ -159,6 +159,19 @@ mixin _$ListItemStore on _ListItemStore, Store {
       (_$endTimeStrComputed ??= Computed<String>(() => super.endTimeStr,
               name: '_ListItemStore.endTimeStr'))
           .value;
+  Computed<bool>? _$isExpiredComputed;
+
+  @override
+  bool get isExpired =>
+      (_$isExpiredComputed ??= Computed<bool>(() => super.isExpired,
+              name: '_ListItemStore.isExpired'))
+          .value;
+  Computed<bool>? _$isValidComputed;
+
+  @override
+  bool get isValid => (_$isValidComputed ??=
+          Computed<bool>(() => super.isValid, name: '_ListItemStore.isValid'))
+      .value;
 
   final _$titleAtom = Atom(name: '_ListItemStore.title');
 
@@ -250,18 +263,18 @@ mixin _$ListItemStore on _ListItemStore, Store {
     });
   }
 
-  final _$checkedAtom = Atom(name: '_ListItemStore.checked');
+  final _$enabledAtom = Atom(name: '_ListItemStore.enabled');
 
   @override
-  bool get checked {
-    _$checkedAtom.reportRead();
-    return super.checked;
+  bool get enabled {
+    _$enabledAtom.reportRead();
+    return super.enabled;
   }
 
   @override
-  set checked(bool value) {
-    _$checkedAtom.reportWrite(value, super.checked, () {
-      super.checked = value;
+  set enabled(bool value) {
+    _$enabledAtom.reportWrite(value, super.enabled, () {
+      super.enabled = value;
     });
   }
 
@@ -280,11 +293,11 @@ mixin _$ListItemStore on _ListItemStore, Store {
   }
 
   @override
-  void check(bool checkValue) {
+  void enable(bool checkValue) {
     final _$actionInfo = _$_ListItemStoreActionController.startAction(
-        name: '_ListItemStore.check');
+        name: '_ListItemStore.enable');
     try {
-      return super.check(checkValue);
+      return super.enable(checkValue);
     } finally {
       _$_ListItemStoreActionController.endAction(_$actionInfo);
     }
@@ -310,10 +323,12 @@ account: ${account},
 password: ${password},
 createTime: ${createTime},
 endTime: ${endTime},
-checked: ${checked},
+enabled: ${enabled},
 encode: ${encode},
 createTimeStr: ${createTimeStr},
-endTimeStr: ${endTimeStr}
+endTimeStr: ${endTimeStr},
+isExpired: ${isExpired},
+isValid: ${isValid}
     ''';
   }
 }

@@ -4,48 +4,49 @@ version: 1.0.0+1
 publish_to: none
 
 environment:
-    sdk: '>=2.12.0-0 <3.0.0'
+  sdk: '>=2.12.0-0 <3.0.0'
 
 dependencies:
-    authentication_repository:
-        path: packages/authentication_repository
-    equatable: ^2.0.0
-    file_picker: ^4.0.1
-    flutter:
-        sdk: flutter
-    flutter_bloc:
-        path: ../../packages/flutter_bloc
-    flutter_datetime_picker: ^1.5.1
-    flutter_mobx: ^2.0.2
-    formz: ^0.4.0
-    intl: ^0.17.0
-    logger: ^1.1.0
-    mobx: ^2.0.4
-    moor: ^4.6.1
-    moor_flutter: ^4.0.0
-    path: ^1.8.0
-    path_provider: ^2.0.5
-    prompt_dialog: ^1.0.5
-    qr_flutter: ^4.0.0
-    sqflite: ^2.0.0+4
-    sqlite3_flutter_libs: ^0.5.1
-    user_repository:
-        path: packages/user_repository
-    xml: ^5.1.2
+  authentication_repository:
+    path: packages/authentication_repository
+  equatable: ^2.0.0
+  file_picker: ^4.0.1
+  flutter:
+    sdk: flutter
+  flutter_bloc:
+    path: ../../packages/flutter_bloc
+  flutter_datetime_picker: ^1.5.1
+  flutter_mobx: ^2.0.2
+  formz: ^0.4.0
+  ini: ^2.1.0
+  intl: ^0.17.0
+  logger: ^1.1.0
+  mobx: ^2.0.4
+  moor: ^4.6.1
+  moor_flutter: ^4.0.0
+  path: ^1.8.0
+  path_provider: ^2.0.5
+  prompt_dialog: ^1.0.5
+  qr_flutter: ^4.0.0
+  sqflite: ^2.0.0+4
+  sqlite3_flutter_libs: ^0.5.1
+  user_repository:
+    path: packages/user_repository
+  xml: ^5.1.2
 
 dev_dependencies:
-    bloc_test:
-        path: ../../packages/bloc_test
-    build_runner: ^2.1.1
-    flutter_test:
-        sdk: flutter
-    mobx_codegen: ^2.0.2
-    mocktail: ^0.1.0
-    moor_generator: ^4.6.0
+  bloc_test:
+    path: ../../packages/bloc_test
+  build_runner: ^2.1.1
+  flutter_test:
+    sdk: flutter
+  mobx_codegen: ^2.0.2
+  mocktail: ^0.1.0
+  moor_generator: ^4.6.0
 
 flutter:
-    uses-material-design: true
-    # To add assets to your application, add an assets section, like this:
-    assets:
-        - assets/images/folder.png
-        - assets/images/editor.png
+  uses-material-design: true
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/images/folder.png
+    - assets/images/editor.png

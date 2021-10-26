@@ -23,7 +23,7 @@ abstract class _DashboardStore with Store {
   void addItem(ListItemStore item) => items.add(item);
 
   @action
-  void checked(int index, bool value) => items[index].check(value);
+  void checked(int index, bool value) => items[index].enable(value);
 
   @action
   void changePrefix(String value) {
@@ -73,10 +73,10 @@ abstract class _ListItemStore with Store {
   }
 
   @observable
-  bool checked = false;
+  bool enabled = false;
 
   @action
-  void check(bool checkValue) => checked = checkValue;
+  void enable(bool checkValue) => enabled = checkValue;
 
   @action
   void reset() => password = Util.genPw();
@@ -98,22 +98,32 @@ abstract class _ListItemStore with Store {
     return DateFormat('yyyy-MM-dd').format(date);
   }
 
-  Map<String, dynamic> toMap() => <String, dynamic>{
-        'id': id,
-        'ty': ty,
-        'ro': ro,
-        'alias': title,
-        'ip': ip,
-        'account': account,
-        'password': password,
-        'enable': checked ? 'true' : 'false',
-        'create_time': createTime,
-        'end_time': endTime,
-      };
+  @computed
+  bool get isExpired {
+    return DateTime.now().millisecondsSinceEpoch > endTime;
+  }
+
+  @computed
+  bool get isValid {
+    return !isExpired && enabled;
+  }
+
+  // Map<String, dynamic> toMap() => <String, dynamic>{
+  //       'id': id,
+  //       'ty': ty,
+  //       'ro': ro,
+  //       'alias': title,
+  //       'ip': ip,
+  //       'account': account,
+  //       'password': password,
+  //       'enable': enabled ? 'true' : 'false',
+  //       'create_time': createTime,
+  //       'end_time': endTime,
+  //     };
 
   @override
   String toString() {
     // ignore: lines_longer_than_80_chars
-    return 'WHItem{id: $id, ty: $ty, ro: $ro, alias: $title, ip: $ip, account: $account, password : $password, enable: $checked, create_time: $createTime, end_time: $endTime}';
+    return 'WHItem{id: $id, ty: $ty, ro: $ro, alias: $title, ip: $ip, account: $account, password : $password, enable: $enabled, create_time: $createTime, end_time: $endTime}';
   }
 }
