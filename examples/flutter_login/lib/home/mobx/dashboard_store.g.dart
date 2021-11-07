@@ -9,6 +9,21 @@ part of 'dashboard_store.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
 
 mixin _$DashboardStore on _DashboardStore, Store {
+  final _$ipAtom = Atom(name: '_DashboardStore.ip');
+
+  @override
+  String get ip {
+    _$ipAtom.reportRead();
+    return super.ip;
+  }
+
+  @override
+  set ip(String value) {
+    _$ipAtom.reportWrite(value, super.ip, () {
+      super.ip = value;
+    });
+  }
+
   final _$sipPrefixAtom = Atom(name: '_DashboardStore.sipPrefix');
 
   @override
@@ -95,6 +110,17 @@ mixin _$DashboardStore on _DashboardStore, Store {
   }
 
   @override
+  void setIp(String value) {
+    final _$actionInfo = _$_DashboardStoreActionController.startAction(
+        name: '_DashboardStore.setIp');
+    try {
+      return super.setIp(value);
+    } finally {
+      _$_DashboardStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   void changePrefix(String value) {
     final _$actionInfo = _$_DashboardStoreActionController.startAction(
         name: '_DashboardStore.changePrefix');
@@ -130,6 +156,7 @@ mixin _$DashboardStore on _DashboardStore, Store {
   @override
   String toString() {
     return '''
+ip: ${ip},
 sipPrefix: ${sipPrefix},
 dirty: ${dirty},
 items: ${items},

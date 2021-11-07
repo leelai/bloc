@@ -13,14 +13,18 @@ import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:winhome/authentication/authentication.dart';
 import 'package:winhome/home/mobx/dashboard_store.dart';
 import 'package:winhome/home/model/qrcode.dart';
 import 'package:winhome/home/model/util.dart';
+import 'package:winhome/main.dart';
 import 'package:xml/xml.dart';
 
 final dashboardStore = DashboardStore();
+
+final addressbookini = 'addressbook.ini';
 
 const fontSize = 18.0;
 const enableColor = Color(0xFF73ACCE);
@@ -54,16 +58,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void loadData() async {
-    var fileName = 'addressbook.ini';
     var dir = (await getApplicationDocumentsDirectory()).path;
-    var configFile = '$dir/$fileName';
+    var configFile = '$dir/$addressbookini';
 
     var directoryExists = await Directory(configFile).exists();
     var fileExists = await File(configFile).exists();
 
     if (directoryExists || fileExists) {
-      // var file = File(configFile);
-      // await file.delete();
       var config = await File(configFile)
           .readAsLines()
           .then((lines) => Config.fromStrings(lines));
@@ -87,29 +88,9 @@ class _HomePageState extends State<HomePage> {
         dashboardStore.items.add(whItem);
       }
     }
-    // load2();
-  }
 
-  void load2() {
-    // var db = AppDatabase();
-    // db.getAllAddressItems().then((value) {
-    //   // logger.v('$value');
-    //   for (var item in value) {
-    //     var _item = ListItemStore()
-    //       ..id = item.id
-    //       ..ty = item.ty
-    //       ..ro = item.ro
-    //       ..title = item.alias
-    //       ..ip = item.ip
-    //       ..checked = item.enable
-    //       ..account = item.account
-    //       ..password = item.password
-    //       ..createTime = item.createDate!.millisecondsSinceEpoch
-    //       ..endTime = item.expiredDate!.millisecondsSinceEpoch;
-
-    //     dashboardStore.items.add(_item);
-    //   }
-    // });
+    var sipPrefix = await getSipPrefix();
+    dashboardStore.changePrefix(sipPrefix);
   }
 
   @override
@@ -159,6 +140,13 @@ class _HomePageState extends State<HomePage> {
           tooltip: '編輯案場編號',
           onPressed: () async {
             _editPrefix(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.computer),
+          tooltip: '編輯案場ip',
+          onPressed: () async {
+            _editIp(context);
           },
         ),
         IconButton(
@@ -257,10 +245,10 @@ class _HomePageState extends State<HomePage> {
                       //     fontSize: 16,
                       //   ),
                       // ),
-                      // onConfirm: (date) {
-                      //   dashboardStore.markDirty();
-                      //   item.setEndTime(date);
-                      // },
+                      onConfirm: (date) {
+                        dashboardStore.markDirty();
+                        item.setEndTime(date);
+                      },
                       currentTime: DateTime.now(),
                       locale: LocaleType.en,
                     );
@@ -384,14 +372,40 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _editPrefix(BuildContext context) async {
-    var prefix = await prompt(context);
-    if (prefix != null) {
-      dashboardStore.changePrefix(prefix);
+    var origin = await getSipPrefix();
+    var sipPrefix = await prompt(
+      context,
+      title: const Text('請輸入案場編號'),
+      initialValue: origin,
+    );
+    if (sipPrefix != null) {
+      dashboardStore.changePrefix(sipPrefix);
+
+      var prefs = await SharedPreferences.getInstance();
+      await prefs.setString('sipPrefix', sipPrefix);
+    }
+  }
+
+  void _editIp(BuildContext context) async {
+    var origin = await getIp();
+    var ip = await prompt(
+      context,
+      title: const Text('請輸入案場ip'),
+      initialValue: origin,
+    );
+    if (ip != null) {
+      dashboardStore.setIp(ip);
+
+      var prefs = await SharedPreferences.getInstance();
+      await prefs.setString('ip', ip);
     }
   }
 
   void _changePassword(BuildContext context) async {
-    var newPassword = await prompt(context);
+    var newPassword = await prompt(
+      context,
+      title: const Text('修改密碼'),
+    );
     if (newPassword != null) {
       context
           .read<AuthenticationBloc>()
@@ -405,7 +419,7 @@ class _HomePageState extends State<HomePage> {
 
     for (var element in dashboardStore.items) {
       //print(element);
-      if (element.enabled) {
+      if (element.isValid) {
         sink.write('${dashboardStore.sipPrefix}${element.encode}\n');
       }
     }
@@ -448,9 +462,8 @@ class _HomePageState extends State<HomePage> {
       var today = DateTime.now();
       var end = today.add(const Duration(days: 365));
 
-      var fileName = 'addressbook.ini';
       var dir = (await getApplicationDocumentsDirectory()).path;
-      var configFile = '$dir/$fileName';
+      var configFile = '$dir/$addressbookini';
 
       var directoryExists = await Directory(configFile).exists();
       var fileExists = await File(configFile).exists();
@@ -499,7 +512,7 @@ class _HomePageState extends State<HomePage> {
       await file.writeAsString(config.toString());
 
       logger.d(configFile);
-      logger.d(config.toString());
+      // logger.d(config.toString());
       // print(document.toXmlString(pretty: true, indent: '\t'));
     }
     ScaffoldMessenger.of(context)
@@ -550,9 +563,8 @@ class _HomePageState extends State<HomePage> {
         ..set(item.ro, 'expiredTime', item.endTime.toString());
     }
 
-    var fileName = 'addressbook.ini';
     var dir = (await getApplicationDocumentsDirectory()).path;
-    var configFile = '$dir/$fileName';
+    var configFile = '$dir/$addressbookini';
 
     var directoryExists = await Directory(configFile).exists();
     var fileExists = await File(configFile).exists();

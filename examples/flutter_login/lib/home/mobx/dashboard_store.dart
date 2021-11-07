@@ -8,6 +8,9 @@ class DashboardStore = _DashboardStore with _$DashboardStore;
 
 abstract class _DashboardStore with Store {
   @observable
+  String ip = '';
+
+  @observable
   String sipPrefix = '';
 
   @observable
@@ -24,6 +27,11 @@ abstract class _DashboardStore with Store {
 
   @action
   void checked(int index, bool value) => items[index].enable(value);
+
+  @action
+  void setIp(String value) {
+    ip = value;
+  }
 
   @action
   void changePrefix(String value) {
