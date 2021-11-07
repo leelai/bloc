@@ -78,6 +78,16 @@ void restartSipServer(bool genUserDB) async {
       var i = 0;
 
       var path = Platform.isLinux ? '/etc/flexisip' : dir;
+      var userDB = '$path/user.db';
+      var userDBDirExists = await Directory(path).exists();
+      var userDBfileExists = await File(userDB).exists();
+      logger.d('$path is exist = $userDBDirExists, $userDB=$userDBfileExists');
+
+      if (userDBDirExists == false) {
+        var directory = await Directory(path).create(recursive: true);
+        print('directory created $directory');
+      }
+
       var file = File('$path/user.db');
       var sink = file.openWrite()..write('version:1\n');
 
