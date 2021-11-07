@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -161,6 +162,13 @@ class _HomePageState extends State<HomePage> {
           tooltip: '修改密碼',
           onPressed: () async {
             _changePassword(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.restart_alt),
+          tooltip: '重啟server',
+          onPressed: () async {
+            _restartServer(context);
           },
         ),
         IconButton(
@@ -453,6 +461,10 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _restartServer(BuildContext context) async {
+    _askedToRestart();
+  }
+
   void _genUserDB(BuildContext context) async {
     var file = File('user.db');
     var sink = file.openWrite()..write('version:1\n');
@@ -616,5 +628,78 @@ class _HomePageState extends State<HomePage> {
 
     var file = File(configFile);
     await file.writeAsString(config.toString());
+  }
+
+  Future<void> _askedToRestart() async {
+    var dialog = CupertinoAlertDialog(
+      content: const Text(
+        '重啟Server',
+        style: TextStyle(fontSize: 20),
+      ),
+      actions: <Widget>[
+        CupertinoButton(
+          child: const Text('取消'),
+          onPressed: () {
+            Navigator.pop(context, false);
+          },
+        ),
+        CupertinoButton(
+          child: const Text('确定'),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+        ),
+      ],
+    );
+    switch (await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return dialog;
+        })) {
+      case true:
+        restartSipServer(true);
+        break;
+      case false:
+        // ...
+        break;
+      case null:
+        // dialog dismissed
+        break;
+    }
+  }
+
+  Future<void> _() async {
+    switch (await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text('Select assignment'),
+            children: <Widget>[
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                child: const Text('確定'),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: const Text('取消'),
+              ),
+            ],
+          );
+        })) {
+      case true:
+        // Let's go.
+        // ...
+        break;
+      case false:
+        // ...
+        break;
+      case null:
+        // dialog dismissed
+        break;
+    }
   }
 }

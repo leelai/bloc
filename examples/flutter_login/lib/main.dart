@@ -46,7 +46,8 @@ Future<String> getIp() async {
 
 Future<String> getRestartCmd() async {
   var prefs = await SharedPreferences.getInstance();
-  return prefs.getString('restartCmd') ?? 'echo Hello World';
+  return prefs.getString('restartCmd') ??
+      'systemctl restart flexisip-proxy flexisip-presence';
 }
 
 Future<String> getSchedule() async {
