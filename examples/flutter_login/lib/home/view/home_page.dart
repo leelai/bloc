@@ -163,6 +163,20 @@ class _HomePageState extends State<HomePage> {
             _changePassword(context);
           },
         ),
+        IconButton(
+          icon: const Icon(Icons.voice_chat),
+          tooltip: 'cmd',
+          onPressed: () async {
+            _editRestartCmd(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.voice_over_off),
+          tooltip: '重新啟動週期',
+          onPressed: () async {
+            _editSchedule(context);
+          },
+        ),
         Observer(
           builder: (context) {
             return Visibility(
@@ -398,6 +412,32 @@ class _HomePageState extends State<HomePage> {
 
       var prefs = await SharedPreferences.getInstance();
       await prefs.setString('ip', ip);
+    }
+  }
+
+  void _editRestartCmd(BuildContext context) async {
+    var origin = await getRestartCmd();
+    var cmd = await prompt(
+      context,
+      title: const Text('請輸入指令'),
+      initialValue: origin,
+    );
+    if (cmd != null) {
+      var prefs = await SharedPreferences.getInstance();
+      await prefs.setString('restartCmd', cmd);
+    }
+  }
+
+  void _editSchedule(BuildContext context) async {
+    var origin = await getSchedule();
+    var schedule = await prompt(
+      context,
+      title: const Text('請輸入重新啟動週期'),
+      initialValue: origin,
+    );
+    if (schedule != null) {
+      var prefs = await SharedPreferences.getInstance();
+      await prefs.setString('schedule', schedule);
     }
   }
 

@@ -20,15 +20,18 @@ void main() {
     userRepository: UserRepository(),
   ));
 
-  Cron()
-    ..schedule(
-      Schedule.parse('*/1 * * * *'),
-      () async {
-        print('every one minutes');
-        restartSipServer(Platform.isLinux);
-        //todo: restart flexisip
-      },
-    );
+  getSchedule().then((value) {
+    print('getSchedule=$value');
+    Cron()
+      ..schedule(
+        Schedule.parse(value),
+        () async {
+          print('restartSipServer');
+          // restartSipServer(Platform.isLinux);
+          restartSipServer(true);
+        },
+      );
+  });
 }
 
 Future<String> getSipPrefix() async {
@@ -41,6 +44,19 @@ Future<String> getIp() async {
   return prefs.getString('ip') ?? '';
 }
 
+Future<String> getRestartCmd() async {
+  var prefs = await SharedPreferences.getInstance();
+  return prefs.getString('restartCmd') ?? 'echo Hello World';
+}
+
+Future<String> getSchedule() async {
+  //*/3 * * * *  every three minutes
+  //8-11 * * * *  every 8 and 11 minutes
+  //Every day at midnight	0 0 * * *
+  var prefs = await SharedPreferences.getInstance();
+  return prefs.getString('schedule') ?? '0-59 0 * * *'; //午夜0~59分
+}
+
 void restartSipServer(bool genUserDB) async {
   var dir = (await getApplicationDocumentsDirectory()).path;
   var configFile = '$dir/$addressbookini';
@@ -48,8 +64,9 @@ void restartSipServer(bool genUserDB) async {
   var directoryExists = await Directory(configFile).exists();
   var fileExists = await File(configFile).exists();
   var sipPrefix = await getSipPrefix();
+  var restartCmd = await getRestartCmd();
 
-  logger.d('sipPrefix: $sipPrefix');
+  logger.d('[restartSipServer] configFile: $configFile');
 
   if (directoryExists || fileExists) {
     var config = await File(configFile)
@@ -60,7 +77,8 @@ void restartSipServer(bool genUserDB) async {
     if (genUserDB) {
       var i = 0;
 
-      var file = File('/etc/flexisip/user.db');
+      var path = Platform.isLinux ? '/etc/flexisip' : dir;
+      var file = File('$path/user.db');
       var sink = file.openWrite()..write('version:1\n');
 
       for (var section in sections) {
@@ -77,7 +95,11 @@ void restartSipServer(bool genUserDB) async {
           ..createTime = int.parse(config.get(section, 'createTime')!)
           ..endTime = int.parse(config.get(section, 'expiredTime')!);
 
-        sink.write('$sipPrefix${item.encode}\n');
+        if (item.isValid) {
+          sink.write('$sipPrefix${item.encode}\n');
+        } else {
+          logger.d('${item.account} is not valid');
+        }
       }
 
       await sink.close();
@@ -85,7 +107,8 @@ void restartSipServer(bool genUserDB) async {
       print(file.absolute);
 
       var shell = Shell();
-      await shell.run('echo Hello 1');
+
+      await shell.run(restartCmd);
     } else {
       // for (var section in sections) {
       //   logger.d(section);
@@ -93,5 +116,7 @@ void restartSipServer(bool genUserDB) async {
       // var shell = Shell();
       // await shell.run('echo Hello 2');
     }
+  } else {
+    logger.w('directory is not exist');
   }
 }
