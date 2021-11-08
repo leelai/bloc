@@ -129,7 +129,6 @@ class _HomePageState extends State<HomePage> {
       ),
       actions: [
         IconButton(
-          // icon: Image.asset('assets/images/folder.png'),
           icon: const Icon(Icons.read_more),
           tooltip: '讀取Addressbook',
           onPressed: () async {
@@ -150,18 +149,32 @@ class _HomePageState extends State<HomePage> {
             _editIp(context);
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.check),
-          tooltip: '產生user.db',
-          onPressed: () async {
-            _genUserDB(context);
-          },
-        ),
+        // IconButton(
+        //   icon: const Icon(Icons.check),
+        //   tooltip: '產生user.db',
+        //   onPressed: () async {
+        //     _genUserDB(context);
+        //   },
+        // ),
         IconButton(
           icon: const Icon(Icons.password),
           tooltip: '修改密碼',
           onPressed: () async {
             _changePassword(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.comment),
+          tooltip: '啟動指令',
+          onPressed: () async {
+            _editRestartCmd(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.date_range),
+          tooltip: '重新啟動週期',
+          onPressed: () async {
+            _editSchedule(context);
           },
         ),
         IconButton(
@@ -171,25 +184,11 @@ class _HomePageState extends State<HomePage> {
             _restartServer(context);
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.voice_chat),
-          tooltip: 'cmd',
-          onPressed: () async {
-            _editRestartCmd(context);
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.voice_over_off),
-          tooltip: '重新啟動週期',
-          onPressed: () async {
-            _editSchedule(context);
-          },
-        ),
         Observer(
           builder: (context) {
             return Visibility(
               child: IconButton(
-                icon: const Icon(Icons.money),
+                icon: const Icon(Icons.save),
                 tooltip: '修改設定',
                 onPressed: () async {
                   //_changePassword(context);
