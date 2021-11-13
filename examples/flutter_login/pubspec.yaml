@@ -12,6 +12,7 @@ dependencies:
   cron: ^0.4.0
   equatable: ^2.0.0
   file_picker: ^4.0.1
+  filesystem_picker: ^2.0.0
   flutter:
     sdk: flutter
   flutter_bloc:
@@ -26,7 +27,7 @@ dependencies:
   moor: ^4.6.1
   moor_flutter: ^4.0.0
   path: ^1.8.0
-  path_provider: ^2.0.5
+  path_provider: ^2.0.6
   process_run: ^0.12.2+2
   prompt_dialog: ^1.0.5
   qr_flutter: ^4.0.0

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -22,6 +23,8 @@ import 'package:winhome/home/model/qrcode.dart';
 import 'package:winhome/home/model/util.dart';
 import 'package:winhome/main.dart';
 import 'package:xml/xml.dart';
+
+import 'generate_screen.dart';
 
 final dashboardStore = DashboardStore();
 
@@ -200,6 +203,27 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
+        IconButton(
+          icon: const Icon(Icons.backup),
+          tooltip: '備份',
+          onPressed: () async {
+            var rootPath = await getDownloadsDirectory();
+            logger.d(rootPath);
+            String? path = await FilesystemPicker.open(
+              title: 'Save to folder',
+              context: context,
+              rootDirectory: rootPath!!,
+              fsType: FilesystemType.folder,
+              pickText: 'Save file to this folder',
+              folderIconColor: Colors.teal,
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.date_range),
+          tooltip: '產生qr code',
+          onPressed: () async {},
+        ),
       ],
     );
   }
@@ -297,11 +321,11 @@ class _HomePageState extends State<HomePage> {
                     child: item.enabled
                         ? const Text(
                             '暫停',
-                            style: TextStyle(color: enableButtonTextColor),
+                            // style: TextStyle(color: enableButtonTextColor),
                           )
                         : const Text(
                             '啟用',
-                            style: TextStyle(color: enableButtonTextColor),
+                            // style: TextStyle(color: enableButtonTextColor),
                           )),
               ),
             ),
@@ -317,10 +341,10 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     '重置密碼',
-                    style: TextStyle(
-                        color: item.isValid
-                            ? enableButtonTextColor
-                            : disableButtonTextColor),
+                    // style: TextStyle(
+                    //     color: item.isValid
+                    //         ? enableButtonTextColor
+                    //         : disableButtonTextColor),
                   ),
                 ),
               ),
@@ -330,18 +354,23 @@ class _HomePageState extends State<HomePage> {
               child: TextButton(
                 onPressed: () {
                   if (item.isValid) {
-                    _showMyDialog(context, item.account, item.password,
-                        '210.68.245.165:54345', dashboardStore.sipPrefix);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<MaterialPageRoute>(
+                          builder: (context) => GenerateScreen()),
+                    );
+                    // _showMyDialog(context, item.account, item.password,
+                    //     '210.68.245.165:54345', dashboardStore.sipPrefix);
                   }
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     '顯示QR碼',
-                    style: TextStyle(
-                        color: item.isValid
-                            ? enableButtonTextColor
-                            : disableButtonTextColor),
+                    // style: TextStyle(
+                    //     color: item.isValid
+                    //         ? enableButtonTextColor
+                    //         : disableButtonTextColor),
                   ),
                 ),
               ),
