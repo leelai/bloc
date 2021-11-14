@@ -28,20 +28,10 @@ void main() {
         () async {
           print('restartSipServer');
           // restartSipServer(Platform.isLinux);
-          restartSipServer(true);
+          restartSipServer();
         },
       );
   });
-}
-
-Future<String> getSipPrefix() async {
-  var prefs = await SharedPreferences.getInstance();
-  return prefs.getString('sipPrefix') ?? '';
-}
-
-Future<String> getIp() async {
-  var prefs = await SharedPreferences.getInstance();
-  return prefs.getString('ip') ?? '';
 }
 
 Future<String> getRestartCmd() async {
@@ -58,76 +48,70 @@ Future<String> getSchedule() async {
   return prefs.getString('schedule') ?? '0-59 0 * * *'; //午夜0~59分
 }
 
-void restartSipServer(bool genUserDB) async {
+void restartSipServer() async {
   var dir = (await getApplicationDocumentsDirectory()).path;
   var configFile = '$dir/$addressbookini';
 
-  var directoryExists = await Directory(configFile).exists();
   var fileExists = await File(configFile).exists();
-  var sipPrefix = await getSipPrefix();
   var restartCmd = await getRestartCmd();
 
-  logger.d('[restartSipServer] configFile: $configFile');
+  logger
+      .d('[restartSipServer] configFile: $configFile , fileExists=$fileExists');
 
-  if (directoryExists || fileExists) {
-    var config = await File(configFile)
-        .readAsLines()
-        .then((lines) => Config.fromStrings(lines));
-
-    var sections = config.sections();
-    if (genUserDB) {
-      var i = 0;
-
-      var path = Platform.isLinux ? '/etc/flexisip' : dir;
-      var userDB = '$path/user.db';
-      var userDBDirExists = await Directory(path).exists();
-      var userDBfileExists = await File(userDB).exists();
-      logger.d('$path is exist = $userDBDirExists, $userDB=$userDBfileExists');
-
-      if (userDBDirExists == false) {
-        var directory = await Directory(path).create(recursive: true);
-        print('directory created $directory');
-      }
-
-      var file = File('$path/user.db');
-      var sink = file.openWrite()..write('version:1\n');
-
-      for (var section in sections) {
-        // logger.d(section);
-        var item = ListItemStore()
-          ..id = i++
-          ..ty = config.get(section, 'ty')!
-          ..ro = config.get(section, 'ro')!
-          ..title = config.get(section, 'alias')!
-          ..ip = config.get(section, 'ip')!
-          ..enabled = config.get(section, 'enable')! == 'true'
-          ..account = config.get(section, 'account')!
-          ..password = config.get(section, 'password')!
-          ..createTime = int.parse(config.get(section, 'createTime')!)
-          ..endTime = int.parse(config.get(section, 'expiredTime')!);
-
-        if (item.isValid) {
-          sink.write('$sipPrefix${item.encode}\n');
-        } else {
-          logger.d('${item.account} is not valid');
-        }
-      }
-
-      await sink.close();
-
-      print(file.absolute);
-
-      var shell = Shell();
-
-      await shell.run(restartCmd);
-    } else {
-      // for (var section in sections) {
-      //   logger.d(section);
-      // }
-      // var shell = Shell();
-      // await shell.run('echo Hello 2');
-    }
-  } else {
-    logger.w('directory is not exist');
+  if (!fileExists) {
+    return;
   }
+
+  var config = await File(configFile)
+      .readAsLines()
+      .then((lines) => Config.fromStrings(lines));
+
+  var sipPrefix = config.get('system', 'sipPrefix') ?? '';
+
+  var sections = config.sections();
+  var i = 0;
+
+  var path = Platform.isLinux ? '/etc/flexisip' : dir;
+  var userDB = '$path/user.db';
+  var userDBDirExists = await Directory(path).exists();
+  var userDBfileExists = await File(userDB).exists();
+  logger.d(
+      '$path is exist = $userDBDirExists, $userDB is exist = $userDBfileExists');
+
+  if (userDBDirExists == false) {
+    var directory = await Directory(path).create(recursive: true);
+    print('directory created $directory');
+  }
+
+  var file = File('$path/user.db');
+  var sink = file.openWrite()..write('version:1\n');
+
+  for (var section in sections) {
+    if (section == 'system') {
+      continue;
+    }
+
+    var item = ListItemStore()
+      ..id = i++
+      ..ty = config.get(section, 'ty')!
+      ..ro = config.get(section, 'ro')!
+      ..title = config.get(section, 'alias')!
+      ..ip = config.get(section, 'ip')!
+      ..enabled = config.get(section, 'enable')! == 'true'
+      ..account = config.get(section, 'account')!
+      ..password = config.get(section, 'password')!
+      ..createTime = int.parse(config.get(section, 'createTime')!)
+      ..endTime = int.parse(config.get(section, 'expiredTime')!);
+
+    if (item.isValid) {
+      sink.write('$sipPrefix${item.encode}\n');
+    } else {
+      //logger.d('${item.account} is not valid');
+    }
+  }
+
+  await sink.close();
+
+  var shell = Shell();
+  await shell.run(restartCmd);
 }

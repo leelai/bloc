@@ -1,6 +1,12 @@
+import 'dart:io';
+
+import 'package:ini/ini.dart';
 import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:winhome/home/model/util.dart';
+
+import '../home.dart';
 
 part 'dashboard_store.g.dart';
 
@@ -31,11 +37,45 @@ abstract class _DashboardStore with Store {
   @action
   void setIp(String value) {
     ip = value;
+
+    save();
   }
 
   @action
   void changePrefix(String value) {
     sipPrefix = value;
+
+    save();
+  }
+
+//
+//save ip and 案場編號 to ini
+//
+  void save() async {
+    var dir = (await getApplicationDocumentsDirectory()).path;
+    var configFile = '$dir/$addressbookini';
+    var directoryExists = await Directory(dir).exists();
+    var fileExists = await File(configFile).exists();
+    if (directoryExists || fileExists) {
+      var config = await File(configFile)
+          .readAsLines()
+          .then((lines) => Config.fromStrings(lines));
+
+      //check section name
+      var sectionName = 'system';
+      if (!config.hasSection(sectionName)) {
+        config.addSection(sectionName);
+      }
+
+      //write ip and sip_prefix
+      config
+        ..set(sectionName, 'ip', ip)
+        ..set(sectionName, 'sipPrefix', sipPrefix);
+
+      //write config back to file
+      var file = File(configFile);
+      await file.writeAsString(config.toString());
+    }
   }
 
   @action

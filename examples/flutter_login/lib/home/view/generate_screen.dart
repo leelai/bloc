@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:winhome/home/model/qrcode.dart';
+
+import '../home.dart';
 
 class GenerateScreen extends StatefulWidget {
   @override
@@ -28,39 +29,64 @@ class GenerateScreenState extends State<GenerateScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QR Code Generator'),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: _captureAndSharePng,
-          )
-        ],
-      ),
+          // title: const Text('QR Code Generator'),
+          // actions: <Widget>[
+          //   IconButton(
+          //     icon: const Icon(Icons.share),
+          //     onPressed: _captureAndSharePng,
+          //   )
+          // ],
+          ),
       body: _contentWidget(),
     );
   }
 
+  Future sleep1() {
+    return Future<int>.delayed(const Duration(milliseconds: 50), () => 1);
+  }
+
   Future<void> _captureAndSharePng() async {
-    try {
-      var boundary = globalKey.currentContext!.findRenderObject()
-          as RenderRepaintBoundary?;
-      var image = await boundary!.toImage();
-      var byteData = await image.toByteData(format: ImageByteFormat.png);
-      var pngBytes = byteData!.buffer.asUint8List();
-
-      final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/image.png').create();
-      await file.writeAsBytes(pngBytes);
-
-      print('qrcode file path=${file.path}');
-      setState(() {
-        _inputErrorText = file.path;
-      });
-      // final channel = const MethodChannel('channel:me.alfian.share/share');
-      // await channel.invokeMethod('shareFile', 'image.png');
-    } catch (e) {
-      print(e.toString());
+    var tempDir = await getDownloadsDirectory();
+    tempDir ??= await getTemporaryDirectory();
+    if (Platform.isMacOS) {
+      tempDir = await getTemporaryDirectory();
     }
+
+    setState(() {
+      _inputErrorText = '路徑:${tempDir!.path}';
+    });
+
+    for (var item in dashboardStore.items) {
+      var winhome = WinhomeQRCode(item.account, item.password,
+          dashboardStore.ip, dashboardStore.sipPrefix);
+      setState(() {
+        _dataString = winhome.toString();
+        // _inputErrorText = '';
+      });
+
+      logger.d(_dataString);
+      await sleep1();
+
+      try {
+        var boundary = globalKey.currentContext!.findRenderObject()
+            as RenderRepaintBoundary?;
+        var image = await boundary!.toImage();
+        var byteData = await image.toByteData(format: ImageByteFormat.png);
+        var pngBytes = byteData!.buffer.asUint8List();
+
+        final file = await File('${tempDir.path}/${item.account}.png').create();
+        await file.writeAsBytes(pngBytes);
+
+        // logger.d('qrcode png path = ${file.path}');
+
+        // final channel = const MethodChannel('channel:me.alfian.share/share');
+        // await channel.invokeMethod('shareFile', 'image.png');
+      } catch (e) {
+        print(e.toString());
+      }
+    }
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('完成！')));
   }
 
   Widget _contentWidget() {
@@ -79,31 +105,13 @@ class GenerateScreenState extends State<GenerateScreen> {
             ),
             child: Container(
               height: _topSectionHeight,
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      decoration: InputDecoration(
-                        hintText: 'Enter a custom message',
-                        errorText: _inputErrorText,
-                      ),
-                    ),
+              child: Column(
+                children: [
+                  TextButton(
+                    child: const Text('產生QRCode'),
+                    onPressed: _captureAndSharePng,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10.0),
-                    child: TextButton(
-                      child: const Text('SUBMIT'),
-                      onPressed: () {
-                        setState(() {
-                          _dataString = _textController.text;
-                          _inputErrorText = '';
-                        });
-                      },
-                    ),
-                  )
+                  Text(_inputErrorText)
                 ],
               ),
             ),

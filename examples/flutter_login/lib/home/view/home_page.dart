@@ -65,36 +65,114 @@ class _HomePageState extends State<HomePage> {
     var dir = (await getApplicationDocumentsDirectory()).path;
     var configFile = '$dir/$addressbookini';
 
-    var directoryExists = await Directory(configFile).exists();
+    var directoryExists = await Directory(dir).exists();
     var fileExists = await File(configFile).exists();
 
-    if (directoryExists || fileExists) {
-      var config = await File(configFile)
-          .readAsLines()
-          .then((lines) => Config.fromStrings(lines));
-
-      var sections = config.sections();
-      var i = 0;
-      for (var section in sections) {
-        //logger.d(section);
-        var whItem = ListItemStore()
-          ..id = i++
-          ..ty = config.get(section, 'ty')!
-          ..ro = config.get(section, 'ro')!
-          ..title = config.get(section, 'alias')!
-          ..ip = config.get(section, 'ip')!
-          ..enabled = config.get(section, 'enable')! == 'true'
-          ..account = config.get(section, 'account')!
-          ..password = config.get(section, 'password')!
-          ..createTime = int.parse(config.get(section, 'createTime')!)
-          ..endTime = int.parse(config.get(section, 'expiredTime')!);
-
-        dashboardStore.items.add(whItem);
-      }
+    if (!directoryExists || !fileExists) {
+      return;
     }
 
-    var sipPrefix = await getSipPrefix();
-    dashboardStore.changePrefix(sipPrefix);
+    //load config
+    var config = await File(configFile)
+        .readAsLines()
+        .then((lines) => Config.fromStrings(lines));
+
+    //list all sections
+    var sections = config.sections();
+    var i = 0;
+    dashboardStore.items.clear();
+    for (var section in sections) {
+      //skip system section
+      if (section == 'system') {
+        continue;
+      }
+
+      //winhome item
+      var whItem = ListItemStore()
+        ..id = i++
+        ..ty = config.get(section, 'ty')!
+        ..ro = config.get(section, 'ro')!
+        ..title = config.get(section, 'alias')!
+        ..ip = config.get(section, 'ip')!
+        ..enabled = config.get(section, 'enable')! == 'true'
+        ..account = config.get(section, 'account')!
+        ..password = config.get(section, 'password')!
+        ..createTime = int.parse(config.get(section, 'createTime')!)
+        ..endTime = int.parse(config.get(section, 'expiredTime')!);
+
+      dashboardStore.items.add(whItem);
+    }
+
+    //ip
+    var ip = config.get('system', 'ip');
+    if (ip != null) {
+      dashboardStore.setIp(ip);
+    }
+
+    //sipPrefix
+    var sipPrefix = config.get('system', 'sipPrefix');
+    if (sipPrefix != null) {
+      dashboardStore.changePrefix(sipPrefix);
+    }
+  }
+
+  void backup() async {
+    var dir = (await getApplicationDocumentsDirectory()).path;
+    var configFile = '$dir/$addressbookini';
+    logger.d('backup $configFile');
+    var fileExists = await File(configFile).exists();
+
+    if (!fileExists) {
+      return;
+    }
+    var newDir = (await getDownloadsDirectory())!.path;
+    if (Platform.isMacOS) {
+      newDir = (await getTemporaryDirectory()).path;
+    }
+    var newFile = '$newDir/$addressbookini';
+    logger.d('copy config to $newFile');
+    var config = File(configFile);
+    try {
+      await config.copy(newFile);
+    } on Exception catch (err) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('備份失敗!\n$err')));
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('備份成功!\n$newFile')));
+  }
+
+  void restore() async {
+    var result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: [
+        'ini',
+      ],
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    var dir = (await getApplicationDocumentsDirectory()).path;
+    var configFile = '$dir/$addressbookini';
+
+    var file = File(result.files.single.path.toString());
+
+    try {
+      await file.copy(configFile);
+    } on Exception catch (err) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('還原失敗!\n$err')));
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('還原成功!')));
+
+    loadData();
   }
 
   @override
@@ -183,19 +261,16 @@ class _HomePageState extends State<HomePage> {
         IconButton(
           icon: const Icon(Icons.restart_alt),
           tooltip: '重啟server',
-          onPressed: () async {
-            _restartServer(context);
-          },
+          onPressed: _restartServer,
         ),
         Observer(
           builder: (context) {
             return Visibility(
               child: IconButton(
                 icon: const Icon(Icons.save),
-                tooltip: '修改設定',
-                onPressed: () async {
-                  //_changePassword(context);
-                  await saveAllWHItems();
+                tooltip: '儲存設定',
+                onPressed: () {
+                  saveAllWHItems();
                   dashboardStore.resetDirty();
                 },
               ),
@@ -205,24 +280,28 @@ class _HomePageState extends State<HomePage> {
         ),
         IconButton(
           icon: const Icon(Icons.backup),
-          tooltip: '備份',
+          tooltip: '匯出',
           onPressed: () async {
-            var rootPath = await getDownloadsDirectory();
-            logger.d(rootPath);
-            String? path = await FilesystemPicker.open(
-              title: 'Save to folder',
-              context: context,
-              rootDirectory: rootPath!!,
-              fsType: FilesystemType.folder,
-              pickText: 'Save file to this folder',
-              folderIconColor: Colors.teal,
-            );
+            backup();
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.restore),
+          tooltip: '匯入',
+          onPressed: () async {
+            restore();
           },
         ),
         IconButton(
           icon: const Icon(Icons.date_range),
           tooltip: '產生qr code',
-          onPressed: () async {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute<MaterialPageRoute>(
+                  builder: (context) => GenerateScreen()),
+            );
+          },
         ),
       ],
     );
@@ -335,6 +414,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   if (item.enabled) {
                     item.reset();
+                    dashboardStore.markDirty();
                   }
                 },
                 child: Padding(
@@ -354,13 +434,9 @@ class _HomePageState extends State<HomePage> {
               child: TextButton(
                 onPressed: () {
                   if (item.isValid) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<MaterialPageRoute>(
-                          builder: (context) => GenerateScreen()),
-                    );
-                    // _showMyDialog(context, item.account, item.password,
-                    //     '210.68.245.165:54345', dashboardStore.sipPrefix);
+                    var ip = '${dashboardStore.ip}:54345';
+                    _showMyDialog(context, item.account, item.password, ip,
+                        dashboardStore.sipPrefix);
                   }
                 },
                 child: Padding(
@@ -422,32 +498,30 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _editPrefix(BuildContext context) async {
-    var origin = await getSipPrefix();
+    var origin = dashboardStore.sipPrefix;
     var sipPrefix = await prompt(
       context,
       title: const Text('請輸入案場編號'),
       initialValue: origin,
     );
-    if (sipPrefix != null) {
-      dashboardStore.changePrefix(sipPrefix);
-
-      var prefs = await SharedPreferences.getInstance();
-      await prefs.setString('sipPrefix', sipPrefix);
+    if (sipPrefix != null && sipPrefix != origin) {
+      dashboardStore
+        ..changePrefix(sipPrefix)
+        ..markDirty();
     }
   }
 
   void _editIp(BuildContext context) async {
-    var origin = await getIp();
+    var origin = dashboardStore.ip;
     var ip = await prompt(
       context,
       title: const Text('請輸入案場ip'),
       initialValue: origin,
     );
-    if (ip != null) {
-      dashboardStore.setIp(ip);
-
-      var prefs = await SharedPreferences.getInstance();
-      await prefs.setString('ip', ip);
+    if (ip != null && ip != origin) {
+      dashboardStore
+        ..setIp(ip)
+        ..markDirty();
     }
   }
 
@@ -489,27 +563,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _restartServer(BuildContext context) async {
-    _askedToRestart();
-  }
-
-  void _genUserDB(BuildContext context) async {
-    var file = File('user.db');
-    var sink = file.openWrite()..write('version:1\n');
-
-    for (var element in dashboardStore.items) {
-      //print(element);
-      if (element.isValid) {
-        sink.write('${dashboardStore.sipPrefix}${element.encode}\n');
-      }
-    }
-
-    // Close the IOSink to free system resources.
-    await sink.close();
-
-    print(file.absolute);
-  }
-
   void _loadAddressBookPressed(BuildContext context) async {
     var result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -545,11 +598,11 @@ class _HomePageState extends State<HomePage> {
       var dir = (await getApplicationDocumentsDirectory()).path;
       var configFile = '$dir/$addressbookini';
 
-      var directoryExists = await Directory(configFile).exists();
+      // var directoryExists = await Directory(dir).exists();
       var fileExists = await File(configFile).exists();
 
       var config = Config();
-      if (directoryExists || fileExists) {
+      if (fileExists) {
         var file = File(configFile);
         await file.delete();
       }
@@ -588,10 +641,21 @@ class _HomePageState extends State<HomePage> {
           ..set(whItem.ro, 'createTime', whItem.createTime.toString())
           ..set(whItem.ro, 'expiredTime', whItem.endTime.toString());
       }
+
+      if (!config.hasSection('system')) {
+        config.addSection('system');
+      }
+
+      config
+        ..set('system', 'ip', dashboardStore.ip)
+        ..set('system', 'sipPrefix', dashboardStore.sipPrefix);
+
       var file = File(configFile);
       await file.writeAsString(config.toString());
 
       logger.d(configFile);
+
+      dashboardStore.markDirty();
       // logger.d(config.toString());
       // print(document.toXmlString(pretty: true, indent: '\t'));
     }
@@ -643,22 +707,31 @@ class _HomePageState extends State<HomePage> {
         ..set(item.ro, 'expiredTime', item.endTime.toString());
     }
 
+    if (!config.hasSection('system')) {
+      config.addSection('system');
+    }
+    config
+      ..set('system', 'ip', dashboardStore.ip)
+      ..set('system', 'sipPrefix', dashboardStore.sipPrefix);
+
     var dir = (await getApplicationDocumentsDirectory()).path;
     var configFile = '$dir/$addressbookini';
 
-    var directoryExists = await Directory(configFile).exists();
     var fileExists = await File(configFile).exists();
 
-    if (directoryExists || fileExists) {
+    if (fileExists) {
       var file = File(configFile);
       await file.delete();
     }
 
     var file = File(configFile);
     await file.writeAsString(config.toString());
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('完成！請重新啟動sip服務')));
   }
 
-  Future<void> _askedToRestart() async {
+  Future<void> _restartServer() async {
     var dialog = CupertinoAlertDialog(
       content: const Text(
         '重啟Server',
@@ -685,7 +758,10 @@ class _HomePageState extends State<HomePage> {
           return dialog;
         })) {
       case true:
-        restartSipServer(true);
+        restartSipServer();
+
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('重新啟動完成！')));
         break;
       case false:
         // ...
