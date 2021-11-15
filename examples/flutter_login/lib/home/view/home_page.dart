@@ -390,8 +390,8 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             Card(
-              child: TextButton(
-                onPressed: () {
+              child: InkWell(
+                onTap: () {
                   item.enable(!item.enabled);
                   dashboardStore.markDirty();
                 },
@@ -410,15 +410,15 @@ class _HomePageState extends State<HomePage> {
             ),
             // const Spacer(),
             Card(
-              child: TextButton(
-                onPressed: () {
+              child: InkWell(
+                onTap: () {
                   if (item.enabled) {
                     item.reset();
                     dashboardStore.markDirty();
                   }
                 },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: Text(
                     '重置密碼',
                     // style: TextStyle(
@@ -431,16 +431,16 @@ class _HomePageState extends State<HomePage> {
             ),
             // const Spacer(),
             Card(
-              child: TextButton(
-                onPressed: () {
+              child: InkWell(
+                onTap: () {
                   if (item.isValid) {
                     var ip = '${dashboardStore.ip}:54345';
                     _showMyDialog(context, item.account, item.password, ip,
                         dashboardStore.sipPrefix);
                   }
                 },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: Text(
                     '顯示QR碼',
                     // style: TextStyle(
@@ -482,12 +482,12 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           actions: <Widget>[
-            TextButton(
+            InkWell(
               child: const Text(
                 '關閉',
                 style: TextStyle(fontSize: fontSize),
               ),
-              onPressed: () {
+              onTap: () {
                 Navigator.of(context).pop();
               },
             ),

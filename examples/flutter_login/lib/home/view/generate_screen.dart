@@ -107,9 +107,9 @@ class GenerateScreenState extends State<GenerateScreen> {
               height: _topSectionHeight,
               child: Column(
                 children: [
-                  TextButton(
+                  InkWell(
+                    onTap: _captureAndSharePng,
                     child: const Text('產生QRCode'),
-                    onPressed: _captureAndSharePng,
                   ),
                   Text(_inputErrorText)
                 ],

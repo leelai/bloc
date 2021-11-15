@@ -145,14 +145,24 @@ class _LoginButton extends StatelessWidget {
       builder: (context, state) {
         return state.status.isSubmissionInProgress
             ? const CircularProgressIndicator()
-            : ElevatedButton(
-                key: const Key('loginForm_continue_raisedButton'),
-                child: const Text('登入', style: TextStyle(fontSize: fontSize)),
-                onPressed: state.status.isValidated
-                    ? () {
-                        context.read<LoginBloc>().add(const LoginSubmitted());
-                      }
-                    : null,
+            : Card(
+                child: InkWell(
+                  key: const Key('loginForm_continue_raisedButton'),
+                  child: const Padding(
+                    padding: EdgeInsets.only(
+                      top: 8.0,
+                      bottom: 8.0,
+                      right: 16.0,
+                      left: 16.0,
+                    ),
+                    child: Text('登入', style: TextStyle(fontSize: fontSize)),
+                  ),
+                  onTap: state.status.isValidated
+                      ? () {
+                          context.read<LoginBloc>().add(const LoginSubmitted());
+                        }
+                      : null,
+                ),
               );
       },
     );
