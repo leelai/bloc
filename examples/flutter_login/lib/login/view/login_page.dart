@@ -5,6 +5,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:platform_device_id/platform_device_id.dart';
 import 'package:winhome/home/home.dart';
 import 'package:winhome/login/login.dart';
 
@@ -39,8 +40,17 @@ class _LoginPageState extends State<LoginPage> {
     }
     logger.d(deviceData);
 
-    var key = Platform.isMacOS ? 'systemGUID' : 'machineId';
-    return deviceData[key] as String;
+    String? deviceId;
+    try {
+      deviceId = await PlatformDeviceId.getDeviceId;
+    } on PlatformException {
+      deviceId = 'Failed to get deviceId.';
+    }
+
+    return deviceId ?? 'Failed to get deviceId.';
+
+    // var key = Platform.isMacOS ? 'systemGUID' : 'machineId';
+    // return deviceData[key] as String;
   }
 
   Future<void> initPlatformState() async {
