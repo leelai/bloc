@@ -21,7 +21,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+  // static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
   var sn = '';
 
   @override
@@ -31,20 +31,20 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   static Future<String> getSystemGUID() async {
-    var deviceData = <String, dynamic>{};
+    // var deviceData = <String, dynamic>{};
 
-    if (Platform.isLinux) {
-      deviceData = _readLinuxDeviceInfo(await deviceInfoPlugin.linuxInfo);
-    } else if (Platform.isMacOS) {
-      deviceData = _readMacOsDeviceInfo(await deviceInfoPlugin.macOsInfo);
-    }
-    logger.d(deviceData);
+    // if (Platform.isLinux) {
+    //   deviceData = _readLinuxDeviceInfo(await deviceInfoPlugin.linuxInfo);
+    // } else if (Platform.isMacOS) {
+    //   deviceData = _readMacOsDeviceInfo(await deviceInfoPlugin.macOsInfo);
+    // }
+    // logger.d(deviceData);
 
     String? deviceId;
     try {
       deviceId = await PlatformDeviceId.getDeviceId;
-    } on PlatformException {
-      deviceId = 'Failed to get deviceId.';
+    } on Exception catch (err) {
+      deviceId = err.toString();
     }
 
     return deviceId ?? 'Failed to get deviceId.';
