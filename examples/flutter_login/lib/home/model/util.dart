@@ -8,5 +8,5 @@ class Util {
       String.fromCharCodes(Iterable.generate(
           length, (_) => _chars.codeUnitAt(Random().nextInt(_chars.length))));
 
-  static String genPw() => _getRandomString(10);
+  static String genPw() => _getRandomString(6);
 }

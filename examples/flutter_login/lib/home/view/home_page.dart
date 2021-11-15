@@ -203,11 +203,12 @@ class _HomePageState extends State<HomePage> {
               .add(AuthenticationLogoutRequested());
         },
       ),
-      title: BlocBuilder<AuthenticationBloc, AuthenticationState>(
-        builder: (context, state) {
-          return Text(state.user.name);
-        },
-      ),
+      title: const Text('Winhome'),
+      // title: BlocBuilder<AuthenticationBloc, AuthenticationState>(
+      //   builder: (context, state) {
+      //     return Text(state.user.name);
+      //   },
+      // ),
       actions: [
         IconButton(
           icon: const Icon(Icons.read_more),
@@ -467,8 +468,8 @@ class _HomePageState extends State<HomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text(
-            '請打開app掃描',
-            style: TextStyle(fontSize: fontSize),
+            'QRCode',
+            // style: TextStyle(fontSize: fontSize),
           ),
           content: Container(
             width: 280,

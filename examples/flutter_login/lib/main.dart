@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:cron/cron.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/widgets.dart';
 import 'package:ini/ini.dart';
 import 'package:path_provider/path_provider.dart';
@@ -45,7 +46,7 @@ Future<String> getSchedule() async {
   //8-11 * * * *  every 8 and 11 minutes
   //Every day at midnight	0 0 * * *
   var prefs = await SharedPreferences.getInstance();
-  return prefs.getString('schedule') ?? '0-59 0 * * *'; //午夜0~59分
+  return prefs.getString('schedule') ?? '0 0 * * *';
 }
 
 void restartSipServer() async {

@@ -10,6 +10,7 @@ dependencies:
   authentication_repository:
     path: packages/authentication_repository
   cron: ^0.4.0
+  device_info_plus: ^3.1.1
   equatable: ^2.0.0
   file_picker: ^4.0.1
   filesystem_picker: ^2.0.0
