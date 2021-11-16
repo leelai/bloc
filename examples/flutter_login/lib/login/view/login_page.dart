@@ -5,6 +5,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:platform_device_id/platform_device_id.dart';
 import 'package:winhome/home/home.dart';
 import 'package:winhome/login/login.dart';
@@ -23,6 +24,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   // static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
   var sn = '';
+  var ver = '';
 
   @override
   void initState() {
@@ -58,37 +60,11 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       sn = systemGUID;
     });
-  }
 
-  static Map<String, dynamic> _readMacOsDeviceInfo(MacOsDeviceInfo data) {
-    return <String, dynamic>{
-      'computerName': data.computerName,
-      'hostName': data.hostName,
-      'arch': data.arch,
-      'model': data.model,
-      'kernelVersion': data.kernelVersion,
-      'osRelease': data.osRelease,
-      'activeCPUs': data.activeCPUs,
-      'memorySize': data.memorySize,
-      'cpuFrequency': data.cpuFrequency,
-      'systemGUID': data.systemGUID,
-    };
-  }
-
-  static Map<String, dynamic> _readLinuxDeviceInfo(LinuxDeviceInfo data) {
-    return <String, dynamic>{
-      'name': data.name,
-      'version': data.version,
-      'id': data.id,
-      'idLike': data.idLike,
-      'versionCodename': data.versionCodename,
-      'versionId': data.versionId,
-      'prettyName': data.prettyName,
-      'buildId': data.buildId,
-      'variant': data.variant,
-      'variantId': data.variantId,
-      'machineId': data.machineId,
-    };
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      ver = 'v${info.version}(${info.buildNumber})';
+    });
   }
 
   @override
@@ -116,6 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                   },
                   child: Text(sn),
                 ),
+                Text(ver),
                 const SizedBox(height: 40)
               ],
             ),

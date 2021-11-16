@@ -226,7 +226,7 @@ class _HomePageState extends State<HomePage> {
         ),
         IconButton(
           icon: const Icon(Icons.computer),
-          tooltip: '編輯案場ip',
+          tooltip: '編輯案場ip:port',
           onPressed: () async {
             _editIp(context);
           },
@@ -435,7 +435,7 @@ class _HomePageState extends State<HomePage> {
               child: InkWell(
                 onTap: () {
                   if (item.isValid) {
-                    var ip = '${dashboardStore.ip}:54345';
+                    var ip = '${dashboardStore.ip}';
                     _showMyDialog(context, item.account, item.password, ip,
                         dashboardStore.sipPrefix);
                   }
@@ -516,7 +516,7 @@ class _HomePageState extends State<HomePage> {
     var origin = dashboardStore.ip;
     var ip = await prompt(
       context,
-      title: const Text('請輸入案場ip'),
+      title: const Text('請輸入案場ip:port'),
       initialValue: origin,
     );
     if (ip != null && ip != origin) {

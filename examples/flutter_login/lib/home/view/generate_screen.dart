@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:winhome/home/model/qrcode.dart';
@@ -53,7 +54,7 @@ class GenerateScreenState extends State<GenerateScreen> {
     }
 
     setState(() {
-      _inputErrorText = '路徑:${tempDir!.path}';
+      _inputErrorText = '${tempDir!.path}';
     });
 
     for (var item in dashboardStore.items) {
@@ -111,7 +112,13 @@ class GenerateScreenState extends State<GenerateScreen> {
                     onTap: _captureAndSharePng,
                     child: const Text('產生QRCode'),
                   ),
-                  Text(_inputErrorText)
+                  InkWell(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: _inputErrorText));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('路徑複製成功！')));
+                      },
+                      child: Text('路徑:$_inputErrorText'))
                 ],
               ),
             ),
