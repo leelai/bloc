@@ -1,16 +1,10 @@
-import 'dart:io';
-
 import 'package:authentication_repository/authentication_repository.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:platform_device_id/platform_device_id.dart';
-import 'package:winhome/home/home.dart';
 import 'package:winhome/login/login.dart';
-
-List<String> systemGUIDs = ['899369E3-745A-5617-A837-3158E968D793'];
+import 'package:winhome/utils/utils.dart';
 
 class LoginPage extends StatefulWidget {
   static Route route() {
@@ -25,6 +19,8 @@ class _LoginPageState extends State<LoginPage> {
   // static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
   var sn = '';
   var ver = '';
+  var showLogin = false;
+  var showError = false;
 
   @override
   void initState() {
@@ -32,31 +28,14 @@ class _LoginPageState extends State<LoginPage> {
     initPlatformState();
   }
 
-  static Future<String> getSystemGUID() async {
-    // var deviceData = <String, dynamic>{};
-
-    // if (Platform.isLinux) {
-    //   deviceData = _readLinuxDeviceInfo(await deviceInfoPlugin.linuxInfo);
-    // } else if (Platform.isMacOS) {
-    //   deviceData = _readMacOsDeviceInfo(await deviceInfoPlugin.macOsInfo);
-    // }
-    // logger.d(deviceData);
-
-    String? deviceId;
-    try {
-      deviceId = await PlatformDeviceId.getDeviceId;
-    } on Exception catch (err) {
-      deviceId = err.toString();
-    }
-
-    return deviceId ?? 'Failed to get deviceId.';
-
-    // var key = Platform.isMacOS ? 'systemGUID' : 'machineId';
-    // return deviceData[key] as String;
-  }
-
   Future<void> initPlatformState() async {
-    var systemGUID = await getSystemGUID();
+    var isVaildDevice = await Util.isVaildDevice();
+    setState(() {
+      showLogin = isVaildDevice;
+      showError = !isVaildDevice;
+    });
+
+    var systemGUID = await Util.getSystemGUID();
     setState(() {
       sn = systemGUID;
     });
@@ -81,20 +60,33 @@ class _LoginPageState extends State<LoginPage> {
             );
           },
           child: Container(
-            child: Column(
-              children: [
-                Expanded(child: LoginForm()),
-                InkWell(
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: sn));
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text('序號複製成功！')));
-                  },
-                  child: Text(sn),
-                ),
-                Text(ver),
-                const SizedBox(height: 40)
-              ],
+            child: Center(
+              child: Column(
+                children: [
+                  Visibility(
+                    visible: showLogin,
+                    child: Expanded(child: LoginForm()),
+                  ),
+                  Visibility(
+                    visible: showError,
+                    child: const Expanded(
+                        child: Center(
+                            child: Text(
+                      '不支援此電腦',
+                    ))),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: sn));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('序號複製成功！')));
+                    },
+                    child: Text(sn),
+                  ),
+                  Text(ver),
+                  const SizedBox(height: 40)
+                ],
+              ),
             ),
           ),
         ),

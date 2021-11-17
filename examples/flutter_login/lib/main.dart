@@ -3,7 +3,6 @@ import 'dart:io' show Platform;
 
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:cron/cron.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/widgets.dart';
 import 'package:ini/ini.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,6 +10,7 @@ import 'package:process_run/shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:user_repository/user_repository.dart';
 import 'package:winhome/app.dart';
+import 'package:winhome/utils/utils.dart';
 
 import 'home/home.dart';
 import 'home/mobx/dashboard_store.dart';
@@ -21,17 +21,21 @@ void main() {
     userRepository: UserRepository(),
   ));
 
-  getSchedule().then((value) {
-    print('getSchedule=$value');
-    Cron()
-      ..schedule(
-        Schedule.parse(value),
-        () async {
-          print('restartSipServer');
-          // restartSipServer(Platform.isLinux);
-          restartSipServer();
-        },
-      );
+  Util.isVaildDevice().then((ok) {
+    if (ok) {
+      getSchedule().then((value) {
+        print('getSchedule=$value');
+        Cron()
+          ..schedule(
+            Schedule.parse(value),
+            () async {
+              print('restartSipServer');
+              // restartSipServer(Platform.isLinux);
+              restartSipServer();
+            },
+          );
+      });
+    }
   });
 }
 
