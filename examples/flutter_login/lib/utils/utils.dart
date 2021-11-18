@@ -23,13 +23,11 @@ class Util {
   static Future<bool> isVaildDevice() async {
     systemGUID ??= await getSystemGUID();
     for (var guid in systemGUIDs) {
-      logger.d('1 guid = $guid');
+      systemGUID = systemGUID!.trim();
       if (systemGUID == guid) {
-        logger.d('2 guid = $guid, systemGUID = $systemGUID');
         return true;
       }
     }
-    logger.d('XXXXXX systemGUID = $systemGUID');
     return false;
   }
 }
