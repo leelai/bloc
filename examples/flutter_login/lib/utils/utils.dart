@@ -1,4 +1,5 @@
 import 'package:platform_device_id/platform_device_id.dart';
+import 'package:winhome/home/home.dart';
 
 List<String> systemGUIDs = [
   '899369E3-745A-5617-A837-3158E968D793',
@@ -22,10 +23,13 @@ class Util {
   static Future<bool> isVaildDevice() async {
     systemGUID ??= await getSystemGUID();
     for (var guid in systemGUIDs) {
+      logger.d('1 guid = $guid');
       if (systemGUID == guid) {
+        logger.d('2 guid = $guid, systemGUID = $systemGUID');
         return true;
       }
     }
+    logger.d('XXXXXX systemGUID = $systemGUID');
     return false;
   }
 }
