@@ -13,6 +13,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:ini/ini.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:process_run/shell.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,8 +21,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:winhome/authentication/authentication.dart';
 import 'package:winhome/home/mobx/dashboard_store.dart';
 import 'package:winhome/home/model/qrcode.dart';
-import 'package:winhome/home/model/util.dart';
 import 'package:winhome/main.dart';
+import 'package:winhome/utils/utils.dart';
 import 'package:xml/xml.dart';
 
 import 'generate_screen.dart';
@@ -101,6 +102,10 @@ class _HomePageState extends State<HomePage> {
         ..endTime = int.parse(config.get(section, 'expiredTime')!);
 
       dashboardStore.items.add(whItem);
+
+      if (i >= totalCount) {
+        break;
+      }
     }
 
     //ip
@@ -113,6 +118,21 @@ class _HomePageState extends State<HomePage> {
     var sipPrefix = config.get('system', 'sipPrefix');
     if (sipPrefix != null) {
       dashboardStore.changePrefix(sipPrefix);
+    }
+
+    var sipAdmin = config.get('system', 'sipAdmin');
+    if (sipAdmin != null) {
+      dashboardStore.setSipAdmin(sipAdmin);
+    }
+
+    var sipMainDoor = config.get('system', 'sipMainDoor');
+    if (sipMainDoor != null) {
+      dashboardStore.setSipMainDoor(sipMainDoor);
+    }
+
+    var sipSmallDoor = config.get('system', 'sipSmallDoor');
+    if (sipSmallDoor != null) {
+      dashboardStore.setSipSmallDoor(sipSmallDoor);
     }
   }
 
@@ -218,6 +238,27 @@ class _HomePageState extends State<HomePage> {
           },
         ),
         IconButton(
+          icon: const Icon(Icons.security),
+          tooltip: '管理機',
+          onPressed: () async {
+            _editPC(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.door_front_door),
+          tooltip: '大門口機',
+          onPressed: () async {
+            _editPC2(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.door_back_door),
+          tooltip: '小門口機',
+          onPressed: () async {
+            _editPC3(context);
+          },
+        ),
+        IconButton(
           icon: const Icon(Icons.edit),
           tooltip: '編輯案場編號',
           onPressed: () async {
@@ -246,8 +287,24 @@ class _HomePageState extends State<HomePage> {
           },
         ),
         IconButton(
+          icon: const Icon(Icons.play_circle),
+          tooltip: '啟動',
+          onPressed: () async {
+            await Shell()
+                .run('systemctl start flexisip-proxy flexisip-presence');
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.stop),
+          tooltip: '停止',
+          onPressed: () async {
+            await Shell()
+                .run('systemctl stop flexisip-proxy flexisip-presence');
+          },
+        ),
+        IconButton(
           icon: const Icon(Icons.comment),
-          tooltip: '啟動指令',
+          tooltip: '重啟指令',
           onPressed: () async {
             _editRestartCmd(context);
           },
@@ -414,8 +471,9 @@ class _HomePageState extends State<HomePage> {
               child: InkWell(
                 onTap: () {
                   if (item.enabled) {
-                    item.reset();
-                    dashboardStore.markDirty();
+                    _resetPassword(item);
+                    // item.reset();
+                    // dashboardStore.markDirty();
                   }
                 },
                 child: const Padding(
@@ -460,7 +518,15 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showMyDialog(BuildContext context, String name, String password,
       String proxy, String prefix) async {
-    var qrcode = WinhomeQRCode(name, password, proxy, prefix);
+    var qrcode = WinhomeQRCode(
+      name,
+      password,
+      proxy,
+      prefix,
+      dashboardStore.sipAdmin,
+      dashboardStore.sipMainDoor,
+      dashboardStore.sipSmallDoor,
+    );
 
     return showDialog<void>(
       context: context,
@@ -502,7 +568,7 @@ class _HomePageState extends State<HomePage> {
     var origin = dashboardStore.sipPrefix;
     var sipPrefix = await prompt(
       context,
-      title: const Text('請輸入案場編號'),
+      title: Image.asset('assets/images/case_number.png'),
       initialValue: origin,
     );
     if (sipPrefix != null && sipPrefix != origin) {
@@ -516,7 +582,7 @@ class _HomePageState extends State<HomePage> {
     var origin = dashboardStore.ip;
     var ip = await prompt(
       context,
-      title: const Text('請輸入案場ip:port'),
+      title: Image.asset('assets/images/proxy_address.png'),
       initialValue: origin,
     );
     if (ip != null && ip != origin) {
@@ -526,11 +592,54 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _editPC(BuildContext context) async {
+    var origin = dashboardStore.sipAdmin;
+    var userInput = await prompt(
+      context,
+      title: Image.asset('assets/images/admin_sip_address.png'),
+      initialValue: origin,
+    );
+    if (userInput != null && userInput != origin) {
+      dashboardStore
+        ..setSipAdmin(userInput)
+        ..markDirty();
+    }
+  }
+
+  void _editPC2(BuildContext context) async {
+    var origin = dashboardStore.sipMainDoor;
+    var userInput = await prompt(
+      context,
+      title: Image.asset('assets/images/door_sip_address.png'),
+      initialValue: origin,
+    );
+    if (userInput != null && userInput != origin) {
+      dashboardStore
+        ..setSipMainDoor(userInput)
+        ..markDirty();
+    }
+  }
+
+  void _editPC3(BuildContext context) async {
+    var origin = dashboardStore.sipSmallDoor;
+    var userInput = await prompt(
+      context,
+      title: Image.asset('assets/images/small_door.png'),
+      // title: Text('小門口機sip address'),
+      initialValue: origin,
+    );
+    if (userInput != null && userInput != origin) {
+      dashboardStore
+        ..setSipSmallDoor(userInput)
+        ..markDirty();
+    }
+  }
+
   void _editRestartCmd(BuildContext context) async {
     var origin = await getRestartCmd();
     var cmd = await prompt(
       context,
-      title: const Text('請輸入指令'),
+      title: Image.asset('assets/images/restart_cmd.png'),
       initialValue: origin,
     );
     if (cmd != null) {
@@ -543,7 +652,7 @@ class _HomePageState extends State<HomePage> {
     var origin = await getSchedule();
     var schedule = await prompt(
       context,
-      title: const Text('請輸入重新啟動週期'),
+      title: Image.asset('assets/images/restart_period.png'),
       initialValue: origin,
     );
     if (schedule != null) {
@@ -555,7 +664,7 @@ class _HomePageState extends State<HomePage> {
   void _changePassword(BuildContext context) async {
     var newPassword = await prompt(
       context,
-      title: const Text('修改密碼'),
+      title: Image.asset('assets/images/change_password.png'),
     );
     if (newPassword != null) {
       context
@@ -641,6 +750,10 @@ class _HomePageState extends State<HomePage> {
           ..set(whItem.ro, 'password', whItem.password)
           ..set(whItem.ro, 'createTime', whItem.createTime.toString())
           ..set(whItem.ro, 'expiredTime', whItem.endTime.toString());
+
+        if (i >= totalCount) {
+          break;
+        }
       }
 
       if (!config.hasSection('system')) {
@@ -649,7 +762,10 @@ class _HomePageState extends State<HomePage> {
 
       config
         ..set('system', 'ip', dashboardStore.ip)
-        ..set('system', 'sipPrefix', dashboardStore.sipPrefix);
+        ..set('system', 'sipPrefix', dashboardStore.sipPrefix)
+        ..set('system', 'sipAdmin', dashboardStore.sipAdmin)
+        ..set('system', 'sipMainDoor', dashboardStore.sipAdmin)
+        ..set('system', 'sipSmallDoor', dashboardStore.sipSmallDoor);
 
       var file = File(configFile);
       await file.writeAsString(config.toString());
@@ -713,7 +829,10 @@ class _HomePageState extends State<HomePage> {
     }
     config
       ..set('system', 'ip', dashboardStore.ip)
-      ..set('system', 'sipPrefix', dashboardStore.sipPrefix);
+      ..set('system', 'sipPrefix', dashboardStore.sipPrefix)
+      ..set('system', 'sipAdmin', dashboardStore.sipAdmin)
+      ..set('system', 'sipMainDoor', dashboardStore.sipAdmin)
+      ..set('system', 'sipSmallDoor', dashboardStore.sipSmallDoor);
 
     var dir = (await getApplicationDocumentsDirectory()).path;
     var configFile = '$dir/$addressbookini';
@@ -730,23 +849,58 @@ class _HomePageState extends State<HomePage> {
 
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('完成！請重新啟動sip服務')));
+
+    await _restartServer();
   }
 
-  Future<void> _restartServer() async {
+  Future<void> _resetPassword(ListItemStore item) async {
     var dialog = CupertinoAlertDialog(
-      content: const Text(
-        '重啟Server',
-        style: TextStyle(fontSize: 20),
-      ),
+      content: Image.asset('assets/images/reset_warning.png'),
       actions: <Widget>[
         CupertinoButton(
-          child: const Text('取消'),
+          child: Image.asset('assets/images/cancel.png'),
           onPressed: () {
             Navigator.pop(context, false);
           },
         ),
         CupertinoButton(
-          child: const Text('确定'),
+          child: Image.asset('assets/images/yes.png'),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+        ),
+      ],
+    );
+    switch (await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return dialog;
+        })) {
+      case true:
+        item.reset();
+        dashboardStore.markDirty();
+        break;
+      case false:
+        // ...
+        break;
+      case null:
+        // dialog dismissed
+        break;
+    }
+  }
+
+  Future<void> _restartServer() async {
+    var dialog = CupertinoAlertDialog(
+      content: Image.asset('assets/images/restart_server.png'),
+      actions: <Widget>[
+        CupertinoButton(
+          child: Image.asset('assets/images/cancel.png'),
+          onPressed: () {
+            Navigator.pop(context, false);
+          },
+        ),
+        CupertinoButton(
+          child: Image.asset('assets/images/yes.png'),
           onPressed: () {
             Navigator.pop(context, true);
           },

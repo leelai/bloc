@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:platform_device_id/platform_device_id.dart';
-import 'package:winhome/home/home.dart';
+
+const totalCount = 800;
 
 List<String> systemGUIDs = [
   '899369E3-745A-5617-A837-3158E968D793',
@@ -30,4 +33,13 @@ class Util {
     }
     return false;
   }
+
+  static const _chars =
+      'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
+
+  static String _getRandomString(int length) =>
+      String.fromCharCodes(Iterable.generate(
+          length, (_) => _chars.codeUnitAt(Random().nextInt(_chars.length))));
+
+  static String genPw() => _getRandomString(6);
 }

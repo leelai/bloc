@@ -39,6 +39,51 @@ mixin _$DashboardStore on _DashboardStore, Store {
     });
   }
 
+  final _$sipAdminAtom = Atom(name: '_DashboardStore.sipAdmin');
+
+  @override
+  String get sipAdmin {
+    _$sipAdminAtom.reportRead();
+    return super.sipAdmin;
+  }
+
+  @override
+  set sipAdmin(String value) {
+    _$sipAdminAtom.reportWrite(value, super.sipAdmin, () {
+      super.sipAdmin = value;
+    });
+  }
+
+  final _$sipMainDoorAtom = Atom(name: '_DashboardStore.sipMainDoor');
+
+  @override
+  String get sipMainDoor {
+    _$sipMainDoorAtom.reportRead();
+    return super.sipMainDoor;
+  }
+
+  @override
+  set sipMainDoor(String value) {
+    _$sipMainDoorAtom.reportWrite(value, super.sipMainDoor, () {
+      super.sipMainDoor = value;
+    });
+  }
+
+  final _$sipSmallDoorAtom = Atom(name: '_DashboardStore.sipSmallDoor');
+
+  @override
+  String get sipSmallDoor {
+    _$sipSmallDoorAtom.reportRead();
+    return super.sipSmallDoor;
+  }
+
+  @override
+  set sipSmallDoor(String value) {
+    _$sipSmallDoorAtom.reportWrite(value, super.sipSmallDoor, () {
+      super.sipSmallDoor = value;
+    });
+  }
+
   final _$dirtyAtom = Atom(name: '_DashboardStore.dirty');
 
   @override
@@ -132,6 +177,39 @@ mixin _$DashboardStore on _DashboardStore, Store {
   }
 
   @override
+  void setSipAdmin(String value) {
+    final _$actionInfo = _$_DashboardStoreActionController.startAction(
+        name: '_DashboardStore.setSipAdmin');
+    try {
+      return super.setSipAdmin(value);
+    } finally {
+      _$_DashboardStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void setSipMainDoor(String value) {
+    final _$actionInfo = _$_DashboardStoreActionController.startAction(
+        name: '_DashboardStore.setSipMainDoor');
+    try {
+      return super.setSipMainDoor(value);
+    } finally {
+      _$_DashboardStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void setSipSmallDoor(String value) {
+    final _$actionInfo = _$_DashboardStoreActionController.startAction(
+        name: '_DashboardStore.setSipSmallDoor');
+    try {
+      return super.setSipSmallDoor(value);
+    } finally {
+      _$_DashboardStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   void markDirty() {
     final _$actionInfo = _$_DashboardStoreActionController.startAction(
         name: '_DashboardStore.markDirty');
@@ -158,6 +236,9 @@ mixin _$DashboardStore on _DashboardStore, Store {
     return '''
 ip: ${ip},
 sipPrefix: ${sipPrefix},
+sipAdmin: ${sipAdmin},
+sipMainDoor: ${sipMainDoor},
+sipSmallDoor: ${sipSmallDoor},
 dirty: ${dirty},
 items: ${items},
 items2: ${items2}
@@ -166,12 +247,6 @@ items2: ${items2}
 }
 
 mixin _$ListItemStore on _ListItemStore, Store {
-  Computed<String>? _$encodeComputed;
-
-  @override
-  String get encode => (_$encodeComputed ??=
-          Computed<String>(() => super.encode, name: '_ListItemStore.encode'))
-      .value;
   Computed<String>? _$createTimeStrComputed;
 
   @override
@@ -351,7 +426,6 @@ password: ${password},
 createTime: ${createTime},
 endTime: ${endTime},
 enabled: ${enabled},
-encode: ${encode},
 createTimeStr: ${createTimeStr},
 endTimeStr: ${endTimeStr},
 isExpired: ${isExpired},

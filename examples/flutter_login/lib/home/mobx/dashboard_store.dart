@@ -4,7 +4,7 @@ import 'package:ini/ini.dart';
 import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:winhome/home/model/util.dart';
+import 'package:winhome/utils/utils.dart';
 
 import '../home.dart';
 
@@ -18,6 +18,15 @@ abstract class _DashboardStore with Store {
 
   @observable
   String sipPrefix = '';
+
+  @observable
+  String sipAdmin = ''; //sip管理機
+
+  @observable
+  String sipMainDoor = ''; //sip大門口機
+
+  @observable
+  String sipSmallDoor = ''; //sip小門口機
 
   @observable
   var dirty = false;
@@ -48,6 +57,27 @@ abstract class _DashboardStore with Store {
     save();
   }
 
+  @action
+  void setSipAdmin(String value) {
+    sipAdmin = value;
+
+    save();
+  }
+
+  @action
+  void setSipMainDoor(String value) {
+    sipMainDoor = value;
+
+    save();
+  }
+
+  @action
+  void setSipSmallDoor(String value) {
+    sipSmallDoor = value;
+
+    save();
+  }
+
 //
 //save ip and 案場編號 to ini
 //
@@ -70,7 +100,10 @@ abstract class _DashboardStore with Store {
       //write ip and sip_prefix
       config
         ..set(sectionName, 'ip', ip)
-        ..set(sectionName, 'sipPrefix', sipPrefix);
+        ..set(sectionName, 'sipPrefix', sipPrefix)
+        ..set(sectionName, 'sipAdmin', sipAdmin)
+        ..set(sectionName, 'sipMainDoor', sipMainDoor)
+        ..set(sectionName, 'sipSmallDoor', sipSmallDoor);
 
       //write config back to file
       var file = File(configFile);
@@ -129,10 +162,10 @@ abstract class _ListItemStore with Store {
   @action
   void reset() => password = Util.genPw();
 
-  @computed
-  String get encode =>
-      // ignore: lines_longer_than_80_chars
-      '$account@210.68.245.165 clrtxt:$password ;'; //100023@210.68.245.165 clrtxt:123a ;
+  // @computed
+  // String get encode =>
+  //     // ignore: lines_longer_than_80_chars
+  //     '$account@210.68.245.165 clrtxt:$password ;'; //100023@210.68.245.165 clrtxt:123a ;
 
   @computed
   String get createTimeStr {

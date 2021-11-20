@@ -72,6 +72,7 @@ void restartSipServer() async {
       .then((lines) => Config.fromStrings(lines));
 
   var sipPrefix = config.get('system', 'sipPrefix') ?? '';
+  var sipIp = config.get('system', 'ip')!.split(':')[0];
 
   var sections = config.sections();
   var i = 0;
@@ -109,7 +110,8 @@ void restartSipServer() async {
       ..endTime = int.parse(config.get(section, 'expiredTime')!);
 
     if (item.isValid) {
-      sink.write('$sipPrefix${item.encode}\n');
+      var encode = '$sipPrefix${item.account}@$sipIp clrtxt:${item.password};';
+      sink.write('$encode\n');
     } else {
       //logger.d('${item.account} is not valid');
     }

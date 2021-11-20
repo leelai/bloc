@@ -24,7 +24,6 @@ class GenerateScreenState extends State<GenerateScreen> {
   GlobalKey globalKey = GlobalKey();
   String _dataString = 'Hello from this QR';
   String _inputErrorText = '';
-  final TextEditingController _textController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -53,13 +52,22 @@ class GenerateScreenState extends State<GenerateScreen> {
       tempDir = await getTemporaryDirectory();
     }
 
+    await Directory('${tempDir.path}/${dashboardStore.sipPrefix}').create();
+
     setState(() {
-      _inputErrorText = '${tempDir!.path}';
+      _inputErrorText = '${tempDir!.path}/${dashboardStore.sipPrefix}';
     });
 
     for (var item in dashboardStore.items) {
-      var winhome = WinhomeQRCode(item.account, item.password,
-          dashboardStore.ip, dashboardStore.sipPrefix);
+      var winhome = WinhomeQRCode(
+        item.account,
+        item.password,
+        dashboardStore.ip,
+        dashboardStore.sipPrefix,
+        dashboardStore.sipAdmin,
+        dashboardStore.sipMainDoor,
+        dashboardStore.sipSmallDoor,
+      );
       setState(() {
         _dataString = winhome.toString();
         // _inputErrorText = '';
@@ -75,7 +83,9 @@ class GenerateScreenState extends State<GenerateScreen> {
         var byteData = await image.toByteData(format: ImageByteFormat.png);
         var pngBytes = byteData!.buffer.asUint8List();
 
-        final file = await File('${tempDir.path}/${item.account}.png').create();
+        final file = await File(
+                '${tempDir.path}/${dashboardStore.sipPrefix}/${item.account}.png')
+            .create();
         await file.writeAsBytes(pngBytes);
 
         // logger.d('qrcode png path = ${file.path}');

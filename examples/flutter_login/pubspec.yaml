@@ -1,6 +1,6 @@
 name: winhome
 description: A new Flutter project.
-version: 0.0.1+3
+version: 0.0.1+4
 publish_to: none
 
 environment:
@@ -55,5 +55,4 @@ flutter:
     uses-material-design: true
     # To add assets to your application, add an assets section, like this:
     assets:
-        - assets/images/folder.png
-        - assets/images/editor.png
+        - assets/images/
