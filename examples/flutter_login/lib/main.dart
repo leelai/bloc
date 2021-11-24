@@ -90,7 +90,7 @@ void restartSipServer() async {
   }
 
   var file = File('$path/user.db');
-  var sink = file.openWrite()..write('version:1\n');
+  var sink = file.openWrite()..write('version:1\n\n');
 
   for (var section in sections) {
     if (section == 'system') {
@@ -110,7 +110,7 @@ void restartSipServer() async {
       ..endTime = int.parse(config.get(section, 'expiredTime')!);
 
     if (item.isValid) {
-      var encode = '$sipPrefix${item.account}@$sipIp clrtxt:${item.password};';
+      var encode = '$sipPrefix${item.account}@$sipIp clrtxt:${item.password} ;';
       sink.write('$encode\n');
     } else {
       //logger.d('${item.account} is not valid');
