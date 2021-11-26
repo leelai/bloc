@@ -196,6 +196,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // title: BlocBuilder<AuthenticationBloc, AuthenticationState>(
+    //   builder: (context, state) {
+    //     return Text(state.user.name);
+    //   },
+    // ),
     return Scaffold(
       appBar: _appBarBuilder(context),
       body: Observer(
@@ -229,46 +234,88 @@ class _HomePageState extends State<HomePage> {
       //   },
       // ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.read_more),
-          tooltip: '讀取Addressbook',
-          onPressed: () async {
-            _loadAddressBookPressed(context);
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: IconButton(
+                icon: const Icon(Icons.read_more),
+                tooltip: '讀取Addressbook',
+                onPressed: () async {
+                  _loadAddressBookPressed(context);
+                },
+              ),
+            );
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.security),
-          tooltip: '管理機',
-          onPressed: () async {
-            _editPC(context);
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: IconButton(
+                icon: const Icon(Icons.security),
+                tooltip: '管理機',
+                onPressed: () async {
+                  _editPC(context);
+                },
+              ),
+            );
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.door_front_door),
-          tooltip: '大門口機',
-          onPressed: () async {
-            _editPC2(context);
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: IconButton(
+                icon: const Icon(Icons.door_front_door),
+                tooltip: '大門口機',
+                onPressed: () async {
+                  _editPC2(context);
+                },
+              ),
+            );
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.door_back_door),
-          tooltip: '小門口機',
-          onPressed: () async {
-            _editPC3(context);
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: IconButton(
+                icon: const Icon(Icons.door_back_door),
+                tooltip: '小門口機',
+                onPressed: () async {
+                  _editPC3(context);
+                },
+              ),
+            );
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.edit),
-          tooltip: '編輯案場編號',
-          onPressed: () async {
-            _editPrefix(context);
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: '編輯案場編號',
+                onPressed: () async {
+                  _editPrefix(context);
+                },
+              ),
+            );
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.computer),
-          tooltip: '編輯案場ip:port',
-          onPressed: () async {
-            _editIp(context);
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: IconButton(
+                icon: const Icon(Icons.computer),
+                tooltip: '編輯案場ip:port',
+                onPressed: () async {
+                  _editIp(context);
+                },
+              ),
+            );
           },
         ),
         // IconButton(
@@ -301,18 +348,32 @@ class _HomePageState extends State<HomePage> {
                 .run('systemctl stop flexisip-proxy flexisip-presence');
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.comment),
-          tooltip: '重啟指令',
-          onPressed: () async {
-            _editRestartCmd(context);
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: IconButton(
+                icon: const Icon(Icons.comment),
+                tooltip: '重啟指令',
+                onPressed: () async {
+                  _editRestartCmd(context);
+                },
+              ),
+            );
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.date_range),
-          tooltip: '重新啟動週期',
-          onPressed: () async {
-            _editSchedule(context);
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: IconButton(
+                icon: const Icon(Icons.date_range),
+                tooltip: '重新啟動週期',
+                onPressed: () async {
+                  _editSchedule(context);
+                },
+              ),
+            );
           },
         ),
         IconButton(
@@ -349,14 +410,21 @@ class _HomePageState extends State<HomePage> {
             restore();
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.date_range),
-          tooltip: '產生qr code',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute<MaterialPageRoute>(
-                  builder: (context) => GenerateScreen()),
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: IconButton(
+                icon: const Icon(Icons.date_range),
+                tooltip: '產生qr code',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<MaterialPageRoute>(
+                        builder: (context) => GenerateScreen()),
+                  );
+                },
+              ),
             );
           },
         ),
@@ -446,46 +514,48 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            Card(
-              child: InkWell(
-                onTap: () {
-                  item.enable(!item.enabled);
-                  dashboardStore.markDirty();
-                },
-                child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: item.enabled
-                        ? const Text(
-                            '暫停',
-                            // style: TextStyle(color: enableButtonTextColor),
-                          )
-                        : const Text(
-                            '啟用',
-                            // style: TextStyle(color: enableButtonTextColor),
-                          )),
-              ),
+            BlocBuilder<AuthenticationBloc, AuthenticationState>(
+              builder: (context, state) {
+                return Visibility(
+                  visible: state.user.name != '保全人員',
+                  child: Card(
+                    child: InkWell(
+                      onTap: () {
+                        item.enable(!item.enabled);
+                        dashboardStore.markDirty();
+                      },
+                      child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: item.enabled
+                              ? const Text('暫停')
+                              : const Text('啟用')),
+                    ),
+                  ),
+                );
+              },
             ),
             // const Spacer(),
-            Card(
-              child: InkWell(
-                onTap: () {
-                  if (item.enabled) {
-                    _resetPassword(item);
-                    // item.reset();
-                    // dashboardStore.markDirty();
-                  }
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    '重置密碼',
-                    // style: TextStyle(
-                    //     color: item.isValid
-                    //         ? enableButtonTextColor
-                    //         : disableButtonTextColor),
+            BlocBuilder<AuthenticationBloc, AuthenticationState>(
+              builder: (context, state) {
+                return Visibility(
+                  visible: state.user.name != '保全人員',
+                  child: Card(
+                    child: InkWell(
+                      onTap: () {
+                        if (item.enabled) {
+                          _resetPassword(item);
+                          // item.reset();
+                          // dashboardStore.markDirty();
+                        }
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text('重置密碼'),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
             // const Spacer(),
             Card(
@@ -738,17 +808,24 @@ class _HomePageState extends State<HomePage> {
         // insertWHItem(whItem);
 
         // await myDB.insertAddressItem(_foo(whItem));
-        config
-          ..addSection(whItem.ro)
-          ..set(whItem.ro, 'ty', whItem.ty)
-          ..set(whItem.ro, 'alias', whItem.title)
-          ..set(whItem.ro, 'ro', whItem.ro)
-          ..set(whItem.ro, 'ip', whItem.ip)
-          ..set(whItem.ro, 'enable', whItem.enabled.toString())
-          ..set(whItem.ro, 'account', whItem.account)
-          ..set(whItem.ro, 'password', whItem.password)
-          ..set(whItem.ro, 'createTime', whItem.createTime.toString())
-          ..set(whItem.ro, 'expiredTime', whItem.endTime.toString());
+        try {
+          config
+            ..addSection(whItem.ro)
+            ..set(whItem.ro, 'ty', whItem.ty)
+            ..set(whItem.ro, 'alias', whItem.title)
+            ..set(whItem.ro, 'ro', whItem.ro)
+            ..set(whItem.ro, 'ip', whItem.ip)
+            ..set(whItem.ro, 'enable', whItem.enabled.toString())
+            ..set(whItem.ro, 'account', whItem.account)
+            ..set(whItem.ro, 'password', whItem.password)
+            ..set(whItem.ro, 'createTime', whItem.createTime.toString())
+            ..set(whItem.ro, 'expiredTime', whItem.endTime.toString());
+        } catch (e) {
+          logger.e('${whItem.ro} $e');
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('錯誤！ ${whItem.ro} $e')));
+          return;
+        }
 
         if (i >= totalCount) {
           break;
@@ -960,4 +1037,15 @@ class _HomePageState extends State<HomePage> {
         break;
     }
   }
+}
+
+class MyAppBar extends StatelessWidget with PreferredSizeWidget {
+  @override
+  Widget build(BuildContext context) {
+    //BlocBuilder ....
+    return Container();
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
