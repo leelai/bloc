@@ -42,4 +42,17 @@ class Util {
           length, (_) => _chars.codeUnitAt(Random().nextInt(_chars.length))));
 
   static String genPw() => _getRandomString(6);
+
+  static String roToAcc(String ro) {
+    var arr = ro.split('-'); //var one = int.parse('1');
+    var addr1 = '';
+    if (arr[1] == '00') {
+      addr1 = '0${arr[2]}';
+    } else {
+      addr1 = int.parse(arr[1]).toString() + arr[2];
+    }
+    var addr2 = arr[3];
+    var addr3 = arr[4];
+    return 'c$addr1$addr2$addr3';
+  }
 }

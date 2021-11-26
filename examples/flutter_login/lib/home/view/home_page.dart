@@ -20,6 +20,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:winhome/authentication/authentication.dart';
 import 'package:winhome/home/mobx/dashboard_store.dart';
 import 'package:winhome/home/model/qrcode.dart';
+import 'package:winhome/home/view/add_sip_address.dart';
 import 'package:winhome/main.dart';
 import 'package:winhome/utils/utils.dart';
 import 'package:xml/xml.dart';
@@ -202,11 +203,20 @@ class _HomePageState extends State<HomePage> {
     //   },
     // ),
     return Scaffold(
-      appBar: _appBarBuilder(context),
-      body: Observer(
-        builder: _listViewBuilder,
-      ),
-    );
+        appBar: _appBarBuilder(context),
+        body: Observer(
+          builder: _listViewBuilder,
+        ),
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.add),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute<MaterialPageRoute>(
+                  builder: (context) => const AddSipAddress()),
+            );
+          },
+        ));
   }
 
   AppBar _appBarBuilder(BuildContext context) {
@@ -798,7 +808,7 @@ class _HomePageState extends State<HomePage> {
           ..title = element.getAttribute('alias') as String
           ..ip = element.getAttribute('ip') as String
           ..enabled = true
-          ..account = _roToAcc(element.getAttribute('ro') as String)
+          ..account = Util.roToAcc(element.getAttribute('ro') as String)
           ..password = Util.genPw()
           ..createTime = today.millisecondsSinceEpoch
           ..endTime = end.millisecondsSinceEpoch;
@@ -870,19 +880,6 @@ class _HomePageState extends State<HomePage> {
   //     expiredDate: DateTime.fromMillisecondsSinceEpoch(storeItem.endTime),
   //   );
   // }
-
-  String _roToAcc(String ro) {
-    var arr = ro.split('-'); //var one = int.parse('1');
-    var addr1 = '';
-    if (arr[1] == '00') {
-      addr1 = '0${arr[2]}';
-    } else {
-      addr1 = int.parse(arr[1]).toString() + arr[2];
-    }
-    var addr2 = arr[3];
-    var addr3 = arr[4];
-    return 'c$addr1$addr2$addr3';
-  }
 
   Future<void> saveAllWHItems() async {
     var config = Config();
