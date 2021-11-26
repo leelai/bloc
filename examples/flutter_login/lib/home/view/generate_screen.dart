@@ -82,9 +82,10 @@ class GenerateScreenState extends State<GenerateScreen> {
         var image = await boundary!.toImage();
         var byteData = await image.toByteData(format: ImageByteFormat.png);
         var pngBytes = byteData!.buffer.asUint8List();
-
+        var splits = item.ro.split('-');
+        var fileName = splits[1] + splits[2] + splits[3] + splits[4];
         final file = await File(
-                '${tempDir.path}/${dashboardStore.sipPrefix}/${item.account}.png')
+                '${tempDir.path}/${dashboardStore.sipPrefix}/$fileName.png')
             .create();
         await file.writeAsBytes(pngBytes);
 

@@ -840,7 +840,7 @@ class _HomePageState extends State<HomePage> {
         ..set('system', 'ip', dashboardStore.ip)
         ..set('system', 'sipPrefix', dashboardStore.sipPrefix)
         ..set('system', 'sipAdmin', dashboardStore.sipAdmin)
-        ..set('system', 'sipMainDoor', dashboardStore.sipAdmin)
+        ..set('system', 'sipMainDoor', dashboardStore.sipMainDoor)
         ..set('system', 'sipSmallDoor', dashboardStore.sipSmallDoor);
 
       var file = File(configFile);
@@ -907,7 +907,7 @@ class _HomePageState extends State<HomePage> {
       ..set('system', 'ip', dashboardStore.ip)
       ..set('system', 'sipPrefix', dashboardStore.sipPrefix)
       ..set('system', 'sipAdmin', dashboardStore.sipAdmin)
-      ..set('system', 'sipMainDoor', dashboardStore.sipAdmin)
+      ..set('system', 'sipMainDoor', dashboardStore.sipMainDoor)
       ..set('system', 'sipSmallDoor', dashboardStore.sipSmallDoor);
 
     var dir = (await getApplicationDocumentsDirectory()).path;
