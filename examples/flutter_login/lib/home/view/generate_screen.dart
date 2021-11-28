@@ -5,6 +5,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart' as imageExt;
+// import 'package:image/image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:winhome/home/model/qrcode.dart';
@@ -76,15 +78,14 @@ class GenerateScreenState extends State<GenerateScreen> {
         var pngBytes = byteData!.buffer.asUint8List();
         var splits = item.ro.split('-');
         var fileName = splits[1] + splits[2] + splits[3] + splits[4];
-        final file = await File(
-                '${tempDir.path}/${dashboardStore.sipPrefix}/$fileName.png')
-            .create();
+        var filePath = '${tempDir.path}/$fileName.png';
+        final file = await File(filePath).create();
         await file.writeAsBytes(pngBytes);
 
-        // logger.d('qrcode png path = ${file.path}');
-
-        // final channel = const MethodChannel('channel:me.alfian.share/share');
-        // await channel.invokeMethod('shareFile', 'image.png');
+        final png = imageExt.decodeImage(File(filePath).readAsBytesSync())!;
+        var filePathJpg =
+            '${tempDir.path}/${dashboardStore.sipPrefix}/$fileName.jpg';
+        File(filePathJpg).writeAsBytesSync(imageExt.encodeJpg(png));
       } catch (e) {
         print(e.toString());
       }
@@ -133,6 +134,7 @@ class GenerateScreenState extends State<GenerateScreen> {
                 child: QrImage(
                   data: _dataString,
                   size: 0.5 * bodyHeight,
+                  backgroundColor: Colors.white,
                 ),
               ),
             ),
