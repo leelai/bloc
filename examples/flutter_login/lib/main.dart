@@ -94,19 +94,19 @@ void restartSipServer() async {
 
   for (var section in sections) {
     if (section == 'system') {
-      var sipAdmin = config.get('system', 'sipAdmin');
-      if (sipAdmin!.isNotEmpty) {
-        sink.write('$sipAdmin@$sipIp clrtxt:123456 ;\n');
-      }
+      // var sipAdmin = config.get('system', 'sipAdmin');
+      // if (sipAdmin!.isNotEmpty) {
+      //   sink.write('$sipAdmin@$sipIp clrtxt:123456 ;\n');
+      // }
 
-      var sipMainDoor = config.get('system', 'sipMainDoor');
-      if (sipMainDoor!.isNotEmpty) {
-        sink.write('$sipMainDoor@$sipIp clrtxt:123456 ;\n');
-      }
-      var sipSmallDoor = config.get('system', 'sipSmallDoor');
-      if (sipSmallDoor!.isNotEmpty) {
-        sink.write('$sipSmallDoor@$sipIp clrtxt:123456 ;\n');
-      }
+      // var sipMainDoor = config.get('system', 'sipMainDoor');
+      // if (sipMainDoor!.isNotEmpty) {
+      //   sink.write('$sipMainDoor@$sipIp clrtxt:123456 ;\n');
+      // }
+      // var sipSmallDoor = config.get('system', 'sipSmallDoor');
+      // if (sipSmallDoor!.isNotEmpty) {
+      //   sink.write('$sipSmallDoor@$sipIp clrtxt:123456 ;\n');
+      // }
       continue;
     }
 

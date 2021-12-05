@@ -84,6 +84,21 @@ mixin _$DashboardStore on _DashboardStore, Store {
     });
   }
 
+  final _$sipEmAtom = Atom(name: '_DashboardStore.sipEm');
+
+  @override
+  String get sipEm {
+    _$sipEmAtom.reportRead();
+    return super.sipEm;
+  }
+
+  @override
+  set sipEm(String value) {
+    _$sipEmAtom.reportWrite(value, super.sipEm, () {
+      super.sipEm = value;
+    });
+  }
+
   final _$dirtyAtom = Atom(name: '_DashboardStore.dirty');
 
   @override
@@ -111,21 +126,6 @@ mixin _$DashboardStore on _DashboardStore, Store {
   set items(ObservableList<ListItemStore> value) {
     _$itemsAtom.reportWrite(value, super.items, () {
       super.items = value;
-    });
-  }
-
-  final _$items2Atom = Atom(name: '_DashboardStore.items2');
-
-  @override
-  ObservableList<ListItemStore> get items2 {
-    _$items2Atom.reportRead();
-    return super.items2;
-  }
-
-  @override
-  set items2(ObservableList<ListItemStore> value) {
-    _$items2Atom.reportWrite(value, super.items2, () {
-      super.items2 = value;
     });
   }
 
@@ -177,39 +177,6 @@ mixin _$DashboardStore on _DashboardStore, Store {
   }
 
   @override
-  void setSipAdmin(String value) {
-    final _$actionInfo = _$_DashboardStoreActionController.startAction(
-        name: '_DashboardStore.setSipAdmin');
-    try {
-      return super.setSipAdmin(value);
-    } finally {
-      _$_DashboardStoreActionController.endAction(_$actionInfo);
-    }
-  }
-
-  @override
-  void setSipMainDoor(String value) {
-    final _$actionInfo = _$_DashboardStoreActionController.startAction(
-        name: '_DashboardStore.setSipMainDoor');
-    try {
-      return super.setSipMainDoor(value);
-    } finally {
-      _$_DashboardStoreActionController.endAction(_$actionInfo);
-    }
-  }
-
-  @override
-  void setSipSmallDoor(String value) {
-    final _$actionInfo = _$_DashboardStoreActionController.startAction(
-        name: '_DashboardStore.setSipSmallDoor');
-    try {
-      return super.setSipSmallDoor(value);
-    } finally {
-      _$_DashboardStoreActionController.endAction(_$actionInfo);
-    }
-  }
-
-  @override
   void markDirty() {
     final _$actionInfo = _$_DashboardStoreActionController.startAction(
         name: '_DashboardStore.markDirty');
@@ -239,9 +206,9 @@ sipPrefix: ${sipPrefix},
 sipAdmin: ${sipAdmin},
 sipMainDoor: ${sipMainDoor},
 sipSmallDoor: ${sipSmallDoor},
+sipEm: ${sipEm},
 dirty: ${dirty},
-items: ${items},
-items2: ${items2}
+items: ${items}
     ''';
   }
 }
@@ -273,6 +240,12 @@ mixin _$ListItemStore on _ListItemStore, Store {
   @override
   bool get isValid => (_$isValidComputed ??=
           Computed<bool>(() => super.isValid, name: '_ListItemStore.isValid'))
+      .value;
+  Computed<bool>? _$readOnlyComputed;
+
+  @override
+  bool get readOnly => (_$readOnlyComputed ??=
+          Computed<bool>(() => super.readOnly, name: '_ListItemStore.readOnly'))
       .value;
 
   final _$titleAtom = Atom(name: '_ListItemStore.title');
@@ -429,7 +402,8 @@ enabled: ${enabled},
 createTimeStr: ${createTimeStr},
 endTimeStr: ${endTimeStr},
 isExpired: ${isExpired},
-isValid: ${isValid}
+isValid: ${isValid},
+readOnly: ${readOnly}
     ''';
   }
 }

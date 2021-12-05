@@ -79,7 +79,7 @@ class AddSipAddress extends StatelessWidget {
                     ..title = alias
                     ..ip = ''
                     ..enabled = true
-                    ..account = Util.roToAcc(ro)
+                    ..account = Util.roToAcc(ro, '7')
                     ..password = Util.genPw()
                     ..createTime = today.millisecondsSinceEpoch
                     ..endTime = end.millisecondsSinceEpoch;

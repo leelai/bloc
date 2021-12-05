@@ -10,6 +10,7 @@ import 'package:image/image.dart' as imageExt;
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:winhome/home/model/qrcode.dart';
+import 'package:winhome/utils/utils.dart';
 
 import '../home.dart';
 
@@ -53,6 +54,9 @@ class GenerateScreenState extends State<GenerateScreen> {
     });
 
     for (var item in dashboardStore.items) {
+      if (item.ty != '7' && item.ty != '8') {
+        continue;
+      }
       var winhome = WinhomeQRCode(
         item.account,
         item.password,
@@ -61,6 +65,7 @@ class GenerateScreenState extends State<GenerateScreen> {
         dashboardStore.sipAdmin,
         dashboardStore.sipMainDoor,
         dashboardStore.sipSmallDoor,
+        dashboardStore.sipEm,
       );
       setState(() {
         _dataString = winhome.toString();
@@ -86,6 +91,7 @@ class GenerateScreenState extends State<GenerateScreen> {
         var filePathJpg =
             '${tempDir.path}/${dashboardStore.sipPrefix}/$fileName.jpg';
         File(filePathJpg).writeAsBytesSync(imageExt.encodeJpg(png));
+        await file.delete();
       } catch (e) {
         print(e.toString());
       }

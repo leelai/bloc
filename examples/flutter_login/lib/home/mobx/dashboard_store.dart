@@ -29,13 +29,14 @@ abstract class _DashboardStore with Store {
   String sipSmallDoor = ''; //sip小門口機
 
   @observable
+  String sipEm = '';
+
+  @observable
   var dirty = false;
 
   @observable
   var items = ObservableList<ListItemStore>();
 
-  @observable
-  var items2 = ObservableList<ListItemStore>(); //小門口 大門口
 
   @action
   void addItem(ListItemStore item) => items.add(item);
@@ -53,27 +54,6 @@ abstract class _DashboardStore with Store {
   @action
   void changePrefix(String value) {
     sipPrefix = value;
-
-    save();
-  }
-
-  @action
-  void setSipAdmin(String value) {
-    sipAdmin = value;
-
-    save();
-  }
-
-  @action
-  void setSipMainDoor(String value) {
-    sipMainDoor = value;
-
-    save();
-  }
-
-  @action
-  void setSipSmallDoor(String value) {
-    sipSmallDoor = value;
 
     save();
   }
@@ -100,10 +80,10 @@ abstract class _DashboardStore with Store {
       //write ip and sip_prefix
       config
         ..set(sectionName, 'ip', ip)
-        ..set(sectionName, 'sipPrefix', sipPrefix)
-        ..set(sectionName, 'sipAdmin', sipAdmin)
-        ..set(sectionName, 'sipMainDoor', sipMainDoor)
-        ..set(sectionName, 'sipSmallDoor', sipSmallDoor);
+        ..set(sectionName, 'sipPrefix', sipPrefix);
+        // ..set(sectionName, 'sipAdmin', sipAdmin)
+        // ..set(sectionName, 'sipMainDoor', sipMainDoor)
+        // ..set(sectionName, 'sipSmallDoor', sipSmallDoor);
 
       //write config back to file
       var file = File(configFile);
@@ -191,6 +171,11 @@ abstract class _ListItemStore with Store {
   @computed
   bool get isValid {
     return !isExpired && enabled;
+  }
+
+  @computed
+  bool get readOnly {
+    return ty != '7' && ty != '8';
   }
 
   // Map<String, dynamic> toMap() => <String, dynamic>{

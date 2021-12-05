@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -53,6 +54,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final Future<Database> database;
   // var myDB = AppDatabase();
+  var config = Config();
 
   @override
   void initState() {
@@ -74,7 +76,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     //load config
-    var config = await File(configFile)
+    config = await File(configFile)
         .readAsLines()
         .then((lines) => Config.fromStrings(lines));
 
@@ -101,7 +103,21 @@ class _HomePageState extends State<HomePage> {
         ..createTime = int.parse(config.get(section, 'createTime')!)
         ..endTime = int.parse(config.get(section, 'expiredTime')!);
 
-      dashboardStore.items.add(whItem);
+      if (whItem.ty == '1') {
+        //小門
+        dashboardStore.sipSmallDoor = whItem.account;
+      } else if (whItem.ty == '4') {
+        //大門
+        dashboardStore.sipMainDoor = whItem.account;
+      } else if (whItem.ty == '9') {
+        //緊急
+        dashboardStore.sipEm = whItem.account;
+      } else if (whItem.ty == '6') {
+        //管理
+        dashboardStore.sipAdmin = whItem.account;
+      } else {
+        dashboardStore.items.add(whItem);
+      }
 
       if (i >= totalCount) {
         break;
@@ -120,20 +136,20 @@ class _HomePageState extends State<HomePage> {
       dashboardStore.changePrefix(sipPrefix);
     }
 
-    var sipAdmin = config.get('system', 'sipAdmin');
-    if (sipAdmin != null) {
-      dashboardStore.setSipAdmin(sipAdmin);
-    }
+    // var sipAdmin = config.get('system', 'sipAdmin');
+    // if (sipAdmin != null) {
+    //   dashboardStore.setSipAdmin(sipAdmin);
+    // }
 
-    var sipMainDoor = config.get('system', 'sipMainDoor');
-    if (sipMainDoor != null) {
-      dashboardStore.setSipMainDoor(sipMainDoor);
-    }
+    // var sipMainDoor = config.get('system', 'sipMainDoor');
+    // if (sipMainDoor != null) {
+    //   dashboardStore.setSipMainDoor(sipMainDoor);
+    // }
 
-    var sipSmallDoor = config.get('system', 'sipSmallDoor');
-    if (sipSmallDoor != null) {
-      dashboardStore.setSipSmallDoor(sipSmallDoor);
-    }
+    // var sipSmallDoor = config.get('system', 'sipSmallDoor');
+    // if (sipSmallDoor != null) {
+    //   dashboardStore.setSipSmallDoor(sipSmallDoor);
+    // }
   }
 
   void backup() async {
@@ -159,6 +175,8 @@ class _HomePageState extends State<HomePage> {
           .showSnackBar(SnackBar(content: Text('備份失敗!\n$err')));
       return;
     }
+
+    await Clipboard.setData(ClipboardData(text: newFile));
 
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text('備份成功!\n$newFile')));
@@ -258,48 +276,48 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-        BlocBuilder<AuthenticationBloc, AuthenticationState>(
-          builder: (context, state) {
-            return Visibility(
-              visible: state.user.name == '經銷商',
-              child: IconButton(
-                icon: const Icon(Icons.security),
-                tooltip: '管理機',
-                onPressed: () async {
-                  _editPC(context);
-                },
-              ),
-            );
-          },
-        ),
-        BlocBuilder<AuthenticationBloc, AuthenticationState>(
-          builder: (context, state) {
-            return Visibility(
-              visible: state.user.name == '經銷商',
-              child: IconButton(
-                icon: const Icon(Icons.door_front_door),
-                tooltip: '大門口機',
-                onPressed: () async {
-                  _editPC2(context);
-                },
-              ),
-            );
-          },
-        ),
-        BlocBuilder<AuthenticationBloc, AuthenticationState>(
-          builder: (context, state) {
-            return Visibility(
-              visible: state.user.name == '經銷商',
-              child: IconButton(
-                icon: const Icon(Icons.door_back_door),
-                tooltip: '小門口機',
-                onPressed: () async {
-                  _editPC3(context);
-                },
-              ),
-            );
-          },
-        ),
+        // BlocBuilder<AuthenticationBloc, AuthenticationState>(
+        //   builder: (context, state) {
+        //     return Visibility(
+        //       visible: state.user.name == '經銷商',
+        //       child: IconButton(
+        //         icon: const Icon(Icons.security),
+        //         tooltip: '管理機',
+        //         onPressed: () async {
+        //           _editPC(context);
+        //         },
+        //       ),
+        //     );
+        //   },
+        // ),
+        // BlocBuilder<AuthenticationBloc, AuthenticationState>(
+        //   builder: (context, state) {
+        //     return Visibility(
+        //       visible: state.user.name == '經銷商',
+        //       child: IconButton(
+        //         icon: const Icon(Icons.door_front_door),
+        //         tooltip: '大門口機',
+        //         onPressed: () async {
+        //           _editPC2(context);
+        //         },
+        //       ),
+        //     );
+        //   },
+        // ),
+        // BlocBuilder<AuthenticationBloc, AuthenticationState>(
+        //   builder: (context, state) {
+        //     return Visibility(
+        //       visible: state.user.name == '經銷商',
+        //       child: IconButton(
+        //         icon: const Icon(Icons.door_back_door),
+        //         tooltip: '小門口機',
+        //         onPressed: () async {
+        //           _editPC3(context);
+        //         },
+        //       ),
+        //     );
+        //   },
+        // ),
         BlocBuilder<AuthenticationBloc, AuthenticationState>(
           builder: (context, state) {
             return Visibility(
@@ -478,10 +496,10 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('帳號：${item.account}'),
-                Text('密碼：${item.password}'),
+                if(!item.readOnly)Text('密碼：${item.password}'),
               ],
             ),
-            Column(
+            if(!item.readOnly) Column(
               children: [
                 Text('建立時間：${item.createTimeStr}'),
                 InkWell(
@@ -527,7 +545,7 @@ class _HomePageState extends State<HomePage> {
             BlocBuilder<AuthenticationBloc, AuthenticationState>(
               builder: (context, state) {
                 return Visibility(
-                  visible: state.user.name != '保全人員',
+                  visible: !(item.readOnly || state.user.name == '保全人員'),
                   child: Card(
                     child: InkWell(
                       onTap: () {
@@ -548,7 +566,7 @@ class _HomePageState extends State<HomePage> {
             BlocBuilder<AuthenticationBloc, AuthenticationState>(
               builder: (context, state) {
                 return Visibility(
-                  visible: state.user.name != '保全人員',
+                  visible: !(item.readOnly || state.user.name == '保全人員'),
                   child: Card(
                     child: InkWell(
                       onTap: () {
@@ -568,26 +586,33 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             // const Spacer(),
-            Card(
-              child: InkWell(
-                onTap: () {
-                  if (item.isValid) {
-                    var ip = '${dashboardStore.ip}';
-                    _showMyDialog(context, item.account, item.password, ip,
-                        dashboardStore.sipPrefix);
-                  }
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    '顯示QR碼',
-                    // style: TextStyle(
-                    //     color: item.isValid
-                    //         ? enableButtonTextColor
-                    //         : disableButtonTextColor),
+            BlocBuilder<AuthenticationBloc, AuthenticationState>(
+              builder: (context, state) {
+                return Visibility(
+                  visible: !(item.readOnly || state.user.name == '保全人員'),
+                  child: Card(
+                    child: InkWell(
+                      onTap: () {
+                        if (item.isValid) {
+                          var ip = '${dashboardStore.ip}';
+                          _showMyDialog(context, item.account, item.password,
+                              ip, dashboardStore.sipPrefix);
+                        }
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          '顯示QR碼',
+                          // style: TextStyle(
+                          //     color: item.isValid
+                          //         ? enableButtonTextColor
+                          //         : disableButtonTextColor),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -598,14 +623,14 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showMyDialog(BuildContext context, String name, String password,
       String proxy, String prefix) async {
     var qrcode = WinhomeQRCode(
-      name,
-      password,
-      proxy,
-      prefix,
-      dashboardStore.sipAdmin,
-      dashboardStore.sipMainDoor,
-      dashboardStore.sipSmallDoor,
-    );
+        name,
+        password,
+        proxy,
+        prefix,
+        dashboardStore.sipAdmin,
+        dashboardStore.sipMainDoor,
+        dashboardStore.sipSmallDoor,
+        dashboardStore.sipEm);
 
     return showDialog<void>(
       context: context,
@@ -671,48 +696,48 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _editPC(BuildContext context) async {
-    var origin = dashboardStore.sipAdmin;
-    var userInput = await prompt(
-      context,
-      title: Image.asset('assets/images/admin_sip_address.png'),
-      initialValue: origin,
-    );
-    if (userInput != null && userInput != origin) {
-      dashboardStore
-        ..setSipAdmin(userInput)
-        ..markDirty();
-    }
-  }
+  // void _editPC(BuildContext context) async {
+  //   var origin = dashboardStore.sipAdmin;
+  //   var userInput = await prompt(
+  //     context,
+  //     title: Image.asset('assets/images/admin_sip_address.png'),
+  //     initialValue: origin,
+  //   );
+  //   if (userInput != null && userInput != origin) {
+  //     dashboardStore
+  //       ..setSipAdmin(userInput)
+  //       ..markDirty();
+  //   }
+  // }
 
-  void _editPC2(BuildContext context) async {
-    var origin = dashboardStore.sipMainDoor;
-    var userInput = await prompt(
-      context,
-      title: Image.asset('assets/images/door_sip_address.png'),
-      initialValue: origin,
-    );
-    if (userInput != null && userInput != origin) {
-      dashboardStore
-        ..setSipMainDoor(userInput)
-        ..markDirty();
-    }
-  }
+  // void _editPC2(BuildContext context) async {
+  //   var origin = dashboardStore.sipMainDoor;
+  //   var userInput = await prompt(
+  //     context,
+  //     title: Image.asset('assets/images/door_sip_address.png'),
+  //     initialValue: origin,
+  //   );
+  //   if (userInput != null && userInput != origin) {
+  //     dashboardStore
+  //       ..setSipMainDoor(userInput)
+  //       ..markDirty();
+  //   }
+  // }
 
-  void _editPC3(BuildContext context) async {
-    var origin = dashboardStore.sipSmallDoor;
-    var userInput = await prompt(
-      context,
-      title: Image.asset('assets/images/small_door.png'),
-      // title: Text('小門口機sip address'),
-      initialValue: origin,
-    );
-    if (userInput != null && userInput != origin) {
-      dashboardStore
-        ..setSipSmallDoor(userInput)
-        ..markDirty();
-    }
-  }
+  // void _editPC3(BuildContext context) async {
+  //   var origin = dashboardStore.sipSmallDoor;
+  //   var userInput = await prompt(
+  //     context,
+  //     title: Image.asset('assets/images/small_door.png'),
+  //     // title: Text('小門口機sip address'),
+  //     initialValue: origin,
+  //   );
+  //   if (userInput != null && userInput != origin) {
+  //     dashboardStore
+  //       ..setSipSmallDoor(userInput)
+  //       ..markDirty();
+  //   }
+  // }
 
   void _editRestartCmd(BuildContext context) async {
     var origin = await getRestartCmd();
@@ -778,8 +803,7 @@ class _HomePageState extends State<HomePage> {
       var newlist = devs.toList()
         ..sort(
             (a, b) => a.getAttribute('ro')!.compareTo(b.getAttribute('ro')!));
-      // print(devs.toString());
-      var ty7 = newlist.where((dev) => (dev.getAttribute('ty') == '7'));
+      var list = newlist.where((dev) => (dev.getAttribute('ty') != '0'));
       var i = 0;
       var today = DateTime.now();
       var end = today.add(const Duration(days: 365));
@@ -790,30 +814,54 @@ class _HomePageState extends State<HomePage> {
       // var directoryExists = await Directory(dir).exists();
       var fileExists = await File(configFile).exists();
 
-      var config = Config();
+      config = Config();
       if (fileExists) {
         var file = File(configFile);
         await file.delete();
       }
-      //   new File("config.ini").readAsLines()
-      // .then((lines) => new Config.fromStrings(lines))
-      // .then((Config config) => ...);
 
-      // var myDB = AppDatabase();
-      for (var element in ty7) {
+      for (var element in list) {
+        var ty = element.getAttribute('ty') as String;
+        var ro = element.getAttribute('ro') as String;
+        var title = element.getAttribute('alias') as String;
+        var ip = element.getAttribute('ip') as String;
+        var account = Util.roToAcc(ro, ty);
+        var password = '';
+
+        //除了 7~8 之外都用 123456
+        if (ty != '7' && ty != '8') {
+          password = '123456';
+        } else {
+          password = Util.genPw();
+        }
+
         var whItem = ListItemStore()
           ..id = i++
-          ..ty = '7'
-          ..ro = element.getAttribute('ro') as String
-          ..title = element.getAttribute('alias') as String
-          ..ip = element.getAttribute('ip') as String
+          ..ty = ty
+          ..ro = ro
+          ..title = title
+          ..ip = ip
           ..enabled = true
-          ..account = Util.roToAcc(element.getAttribute('ro') as String)
-          ..password = Util.genPw()
+          ..account = account
+          ..password = password
           ..createTime = today.millisecondsSinceEpoch
           ..endTime = end.millisecondsSinceEpoch;
 
-        dashboardStore.items.add(whItem);
+        if (ty == '1') {
+          //小門
+          dashboardStore.sipSmallDoor = account;
+        } else if (ty == '4') {
+          //大門
+          dashboardStore.sipMainDoor = account;
+        } else if (ty == '9') {
+          //緊急
+          dashboardStore.sipEm = account;
+        } else if (ty == '6') {
+          //管理
+          dashboardStore.sipAdmin = account;
+        } else {
+          dashboardStore.items.add(whItem);
+        }
         // ignore: unawaited_futures
         // insertWHItem(whItem);
 
@@ -848,10 +896,11 @@ class _HomePageState extends State<HomePage> {
 
       config
         ..set('system', 'ip', dashboardStore.ip)
-        ..set('system', 'sipPrefix', dashboardStore.sipPrefix)
-        ..set('system', 'sipAdmin', dashboardStore.sipAdmin)
-        ..set('system', 'sipMainDoor', dashboardStore.sipMainDoor)
-        ..set('system', 'sipSmallDoor', dashboardStore.sipSmallDoor);
+        ..set('system', 'sipPrefix', dashboardStore.sipPrefix);
+      // ..set('system', 'sipAdmin', sipAdmin)
+      // ..set('system', 'sipMainDoor', sipMainDoor)
+      // ..set('system', 'sipEm', sipEm)
+      // ..set('system', 'sipSmallDoor', sipSmallDoor);
 
       var file = File(configFile);
       await file.writeAsString(config.toString());
@@ -882,10 +931,13 @@ class _HomePageState extends State<HomePage> {
   // }
 
   Future<void> saveAllWHItems() async {
-    var config = Config();
+    // var config = Config();
     for (var item in dashboardStore.items) {
+      if (!config.hasSection(item.ro)) {
+        config.addSection(item.ro);
+      }
       config
-        ..addSection(item.ro)
+        // ..addSection(item.ro)
         ..set(item.ro, 'ty', item.ty)
         ..set(item.ro, 'alias', item.title)
         ..set(item.ro, 'ip', item.ip)
@@ -902,10 +954,10 @@ class _HomePageState extends State<HomePage> {
     }
     config
       ..set('system', 'ip', dashboardStore.ip)
-      ..set('system', 'sipPrefix', dashboardStore.sipPrefix)
-      ..set('system', 'sipAdmin', dashboardStore.sipAdmin)
-      ..set('system', 'sipMainDoor', dashboardStore.sipMainDoor)
-      ..set('system', 'sipSmallDoor', dashboardStore.sipSmallDoor);
+      ..set('system', 'sipPrefix', dashboardStore.sipPrefix);
+    // ..set('system', 'sipAdmin', dashboardStore.sipAdmin)
+    // ..set('system', 'sipMainDoor', dashboardStore.sipMainDoor)
+    // ..set('system', 'sipSmallDoor', dashboardStore.sipSmallDoor);
 
     var dir = (await getApplicationDocumentsDirectory()).path;
     var configFile = '$dir/$addressbookini';

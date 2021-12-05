@@ -43,7 +43,7 @@ class Util {
 
   static String genPw() => _getRandomString(6);
 
-  static String roToAcc(String ro) {
+  static String roToAcc(String ro, String ty) {
     var arr = ro.split('-'); //var one = int.parse('1');
     var addr1 = '';
     if (arr[1] == '00') {
@@ -53,6 +53,19 @@ class Util {
     }
     var addr2 = arr[3];
     var addr3 = arr[4];
-    return 'c$addr1$addr2$addr3';
+
+    var prefix = '';
+    if (ty == '7' || ty == '8') { //手機
+      prefix = 'c';
+    } else if (ty == '1') { //小門
+      prefix = 'd';
+    } else if (ty == '4') { //大門
+      prefix = 'g';
+    } else if (ty == '9') { //緊急
+      prefix = 'e';
+    } else if (ty == '6') { //管理
+      prefix = 'm';
+    }
+    return '$prefix$addr1$addr2$addr3';
   }
 }
