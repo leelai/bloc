@@ -37,6 +37,13 @@ abstract class _DashboardStore with Store {
   @observable
   var items = ObservableList<ListItemStore>();
 
+  @observable
+  int size = 800;
+
+  @action
+  void setSize(int size) {
+    this.size = size;
+  }
 
   @action
   void addItem(ListItemStore item) => items.add(item);
@@ -80,10 +87,11 @@ abstract class _DashboardStore with Store {
       //write ip and sip_prefix
       config
         ..set(sectionName, 'ip', ip)
-        ..set(sectionName, 'sipPrefix', sipPrefix);
-        // ..set(sectionName, 'sipAdmin', sipAdmin)
-        // ..set(sectionName, 'sipMainDoor', sipMainDoor)
-        // ..set(sectionName, 'sipSmallDoor', sipSmallDoor);
+        ..set(sectionName, 'sipPrefix', sipPrefix)
+        ..set(sectionName, 'size', size.toString());
+      // ..set(sectionName, 'sipAdmin', sipAdmin)
+      // ..set(sectionName, 'sipMainDoor', sipMainDoor)
+      // ..set(sectionName, 'sipSmallDoor', sipSmallDoor);
 
       //write config back to file
       var file = File(configFile);

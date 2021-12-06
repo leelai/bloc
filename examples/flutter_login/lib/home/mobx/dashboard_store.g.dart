@@ -129,8 +129,34 @@ mixin _$DashboardStore on _DashboardStore, Store {
     });
   }
 
+  final _$sizeAtom = Atom(name: '_DashboardStore.size');
+
+  @override
+  int get size {
+    _$sizeAtom.reportRead();
+    return super.size;
+  }
+
+  @override
+  set size(int value) {
+    _$sizeAtom.reportWrite(value, super.size, () {
+      super.size = value;
+    });
+  }
+
   final _$_DashboardStoreActionController =
       ActionController(name: '_DashboardStore');
+
+  @override
+  void setSize(int size) {
+    final _$actionInfo = _$_DashboardStoreActionController.startAction(
+        name: '_DashboardStore.setSize');
+    try {
+      return super.setSize(size);
+    } finally {
+      _$_DashboardStoreActionController.endAction(_$actionInfo);
+    }
+  }
 
   @override
   void addItem(ListItemStore item) {
@@ -208,7 +234,8 @@ sipMainDoor: ${sipMainDoor},
 sipSmallDoor: ${sipSmallDoor},
 sipEm: ${sipEm},
 dirty: ${dirty},
-items: ${items}
+items: ${items},
+size: ${size}
     ''';
   }
 }

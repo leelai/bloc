@@ -73,6 +73,7 @@ void restartSipServer() async {
 
   var sipPrefix = config.get('system', 'sipPrefix') ?? '';
   var sipIp = config.get('system', 'ip')!.split(':')[0];
+  var size = config.get('system', 'size') ?? '800';
 
   var sections = config.sections();
   var i = 0;

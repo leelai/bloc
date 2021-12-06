@@ -119,7 +119,7 @@ class _HomePageState extends State<HomePage> {
         dashboardStore.items.add(whItem);
       }
 
-      if (i >= totalCount) {
+      if (i >= dashboardStore.size) {
         break;
       }
     }
@@ -134,6 +134,13 @@ class _HomePageState extends State<HomePage> {
     var sipPrefix = config.get('system', 'sipPrefix');
     if (sipPrefix != null) {
       dashboardStore.changePrefix(sipPrefix);
+    }
+
+    var size = config.get('system', 'size');
+    if (size != null) {
+      dashboardStore.setSize(int.parse(size));
+    } else {
+      dashboardStore.setSize(800);
     }
 
     // var sipAdmin = config.get('system', 'sipAdmin');
@@ -256,12 +263,28 @@ class _HomePageState extends State<HomePage> {
         },
       ),
       title: const Text('Winhome'),
-      // title: BlocBuilder<AuthenticationBloc, AuthenticationState>(
-      //   builder: (context, state) {
-      //     return Text(state.user.name);
-      //   },
-      // ),
       actions: [
+        BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            return Visibility(
+              visible: state.user.name == '經銷商',
+              child: InkWell(
+                onTap: () {
+                  _changeVolume(context);
+                },
+                child: Center(
+                    child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Observer(
+                    builder: (BuildContext context) {
+                      return Text(dashboardStore.size.toString());
+                    },
+                  ),
+                )),
+              ),
+            );
+          },
+        ),
         BlocBuilder<AuthenticationBloc, AuthenticationState>(
           builder: (context, state) {
             return Visibility(
@@ -276,48 +299,6 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-        // BlocBuilder<AuthenticationBloc, AuthenticationState>(
-        //   builder: (context, state) {
-        //     return Visibility(
-        //       visible: state.user.name == '經銷商',
-        //       child: IconButton(
-        //         icon: const Icon(Icons.security),
-        //         tooltip: '管理機',
-        //         onPressed: () async {
-        //           _editPC(context);
-        //         },
-        //       ),
-        //     );
-        //   },
-        // ),
-        // BlocBuilder<AuthenticationBloc, AuthenticationState>(
-        //   builder: (context, state) {
-        //     return Visibility(
-        //       visible: state.user.name == '經銷商',
-        //       child: IconButton(
-        //         icon: const Icon(Icons.door_front_door),
-        //         tooltip: '大門口機',
-        //         onPressed: () async {
-        //           _editPC2(context);
-        //         },
-        //       ),
-        //     );
-        //   },
-        // ),
-        // BlocBuilder<AuthenticationBloc, AuthenticationState>(
-        //   builder: (context, state) {
-        //     return Visibility(
-        //       visible: state.user.name == '經銷商',
-        //       child: IconButton(
-        //         icon: const Icon(Icons.door_back_door),
-        //         tooltip: '小門口機',
-        //         onPressed: () async {
-        //           _editPC3(context);
-        //         },
-        //       ),
-        //     );
-        //   },
-        // ),
         BlocBuilder<AuthenticationBloc, AuthenticationState>(
           builder: (context, state) {
             return Visibility(
@@ -346,13 +327,6 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-        // IconButton(
-        //   icon: const Icon(Icons.check),
-        //   tooltip: '產生user.db',
-        //   onPressed: () async {
-        //     _genUserDB(context);
-        //   },
-        // ),
         IconButton(
           icon: const Icon(Icons.password),
           tooltip: '修改密碼',
@@ -496,52 +470,53 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('帳號：${item.account}'),
-                if(!item.readOnly)Text('密碼：${item.password}'),
+                if (!item.readOnly) Text('密碼：${item.password}'),
               ],
             ),
-            if(!item.readOnly) Column(
-              children: [
-                Text('建立時間：${item.createTimeStr}'),
-                InkWell(
-                  onTap: () {
-                    DatePicker.showDatePicker(
-                      context,
-                      // showTitleActions: true,
-                      minTime: DateTime.now(),
-                      // maxTime: DateTime(2019, 6, 7),
-                      // theme: const DatePickerTheme(
-                      //   headerColor: Colors.orange,
-                      //   backgroundColor: Colors.blue,
-                      //   itemStyle: TextStyle(
-                      //     color: Colors.white,
-                      //     fontWeight: FontWeight.bold,
-                      //     fontSize: 30,
-                      //   ),
-                      //   doneStyle: TextStyle(
-                      //     color: Colors.white,
-                      //     fontSize: 16,
-                      //   ),
-                      // ),
-                      onConfirm: (date) {
-                        dashboardStore.markDirty();
-                        item.setEndTime(date);
-                      },
-                      currentTime: DateTime.now(),
-                      locale: LocaleType.en,
-                    );
-                  },
-                  child: Text(
-                    '結束時間：${item.endTimeStr}',
-                    style: TextStyle(
-                      decoration: TextDecoration.underline,
-                      color: item.isExpired
-                          ? const Color(0xFFC74A4A)
-                          : const Color(0xFF464646),
+            if (!item.readOnly)
+              Column(
+                children: [
+                  Text('建立時間：${item.createTimeStr}'),
+                  InkWell(
+                    onTap: () {
+                      DatePicker.showDatePicker(
+                        context,
+                        // showTitleActions: true,
+                        minTime: DateTime.now(),
+                        // maxTime: DateTime(2019, 6, 7),
+                        // theme: const DatePickerTheme(
+                        //   headerColor: Colors.orange,
+                        //   backgroundColor: Colors.blue,
+                        //   itemStyle: TextStyle(
+                        //     color: Colors.white,
+                        //     fontWeight: FontWeight.bold,
+                        //     fontSize: 30,
+                        //   ),
+                        //   doneStyle: TextStyle(
+                        //     color: Colors.white,
+                        //     fontSize: 16,
+                        //   ),
+                        // ),
+                        onConfirm: (date) {
+                          dashboardStore.markDirty();
+                          item.setEndTime(date);
+                        },
+                        currentTime: DateTime.now(),
+                        locale: LocaleType.en,
+                      );
+                    },
+                    child: Text(
+                      '結束時間：${item.endTimeStr}',
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: item.isExpired
+                            ? const Color(0xFFC74A4A)
+                            : const Color(0xFF464646),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
             BlocBuilder<AuthenticationBloc, AuthenticationState>(
               builder: (context, state) {
                 return Visibility(
@@ -765,6 +740,20 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _changeVolume(BuildContext context) async {
+    var origin = dashboardStore.size;
+    var newSize = await prompt(
+      context,
+      title: const Text('change size'),
+      initialValue: origin.toString(),
+    );
+    if (newSize != null && newSize != origin.toString()) {
+      dashboardStore
+        ..setSize(int.parse(newSize))
+        ..markDirty();
+    }
+  }
+
   void _changePassword(BuildContext context) async {
     var newPassword = await prompt(
       context,
@@ -885,7 +874,7 @@ class _HomePageState extends State<HomePage> {
           return;
         }
 
-        if (i >= totalCount) {
+        if (i >= dashboardStore.size) {
           break;
         }
       }
@@ -896,7 +885,8 @@ class _HomePageState extends State<HomePage> {
 
       config
         ..set('system', 'ip', dashboardStore.ip)
-        ..set('system', 'sipPrefix', dashboardStore.sipPrefix);
+        ..set('system', 'sipPrefix', dashboardStore.sipPrefix)
+        ..set('system', 'size', dashboardStore.size.toString());
       // ..set('system', 'sipAdmin', sipAdmin)
       // ..set('system', 'sipMainDoor', sipMainDoor)
       // ..set('system', 'sipEm', sipEm)
@@ -914,21 +904,6 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('讀取Addressbook')));
   }
-
-  // AddressItem _foo(ListItemStore storeItem) {
-  //   return AddressItem(
-  //     id: storeItem.id,
-  //     ty: storeItem.ty,
-  //     ro: storeItem.ro,
-  //     alias: storeItem.title,
-  //     ip: storeItem.ip,
-  //     account: storeItem.account,
-  //     password: storeItem.password,
-  //     enable: storeItem.checked,
-  //     createDate: DateTime.fromMillisecondsSinceEpoch(storeItem.createTime),
-  //     expiredDate: DateTime.fromMillisecondsSinceEpoch(storeItem.endTime),
-  //   );
-  // }
 
   Future<void> saveAllWHItems() async {
     // var config = Config();
@@ -954,6 +929,7 @@ class _HomePageState extends State<HomePage> {
     }
     config
       ..set('system', 'ip', dashboardStore.ip)
+      ..set('system', 'size', dashboardStore.size.toString())
       ..set('system', 'sipPrefix', dashboardStore.sipPrefix);
     // ..set('system', 'sipAdmin', dashboardStore.sipAdmin)
     // ..set('system', 'sipMainDoor', dashboardStore.sipMainDoor)
