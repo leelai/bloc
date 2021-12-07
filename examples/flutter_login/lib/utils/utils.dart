@@ -53,7 +53,7 @@ class Util {
     var addr3 = arr[4];
 
     var prefix = '';
-    if (ty == '7' || ty == '8') {
+    if (ty == '8') {
       //手機
       prefix = 'c';
     } else if (ty == '1') {

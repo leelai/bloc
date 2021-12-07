@@ -51,10 +51,12 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+var config = Config();
+
 class _HomePageState extends State<HomePage> {
   late final Future<Database> database;
   // var myDB = AppDatabase();
-  var config = Config();
+  // var config = Config();
 
   @override
   void initState() {
@@ -116,6 +118,7 @@ class _HomePageState extends State<HomePage> {
         //管理
         dashboardStore.sipAdmin = whItem.account;
       } else {
+        //手機
         dashboardStore.items.add(whItem);
       }
 
@@ -381,7 +384,14 @@ class _HomePageState extends State<HomePage> {
         IconButton(
           icon: const Icon(Icons.restart_alt),
           tooltip: '重啟server',
-          onPressed: _restartServer,
+          onPressed: () {
+            if (dashboardStore.dirty) {
+              saveAllWHItems();
+              dashboardStore.resetDirty();
+            } else {
+              _restartServer();
+            }
+          },
         ),
         Observer(
           builder: (context) {
@@ -811,14 +821,17 @@ class _HomePageState extends State<HomePage> {
 
       for (var element in list) {
         var ty = element.getAttribute('ty') as String;
+        if (ty == '7') {
+          continue;
+        }
         var ro = element.getAttribute('ro') as String;
         var title = element.getAttribute('alias') as String;
         var ip = element.getAttribute('ip') as String;
         var account = Util.roToAcc(ro, ty);
         var password = '';
 
-        //除了 7~8 之外都用 123456
-        if (ty != '7' && ty != '8') {
+        //除了 8 是手機, 之外都用 123456
+        if (ty != '8') {
           password = '123456';
         } else {
           password = Util.genPw();
@@ -848,7 +861,8 @@ class _HomePageState extends State<HomePage> {
         } else if (ty == '6') {
           //管理
           dashboardStore.sipAdmin = account;
-        } else {
+        } else if (ty == '8') {
+          //手機
           dashboardStore.items.add(whItem);
         }
         // ignore: unawaited_futures
