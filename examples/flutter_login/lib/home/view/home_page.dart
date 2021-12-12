@@ -536,6 +536,8 @@ class _HomePageState extends State<HomePage> {
                       onTap: () {
                         item.enable(!item.enabled);
                         dashboardStore.markDirty();
+                        saveAllWHItems();
+                        dashboardStore.resetDirty();
                       },
                       child: Padding(
                           padding: const EdgeInsets.all(8.0),

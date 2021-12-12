@@ -61,12 +61,21 @@ class Util {
       prefix = 'd';
     } else if (ty == '4') {
       //大門
+      addr1 = '000';
+      addr3 = '00';
+      addr2 = arr[4];
       prefix = 'g';
     } else if (ty == '9') {
       //緊急
+      addr1 = '000';
+      addr3 = '00';
+      addr2 = arr[4];
       prefix = 'e';
     } else if (ty == '6') {
       //管理
+      addr1 = '000';
+      addr3 = '00';
+      addr2 = arr[4];
       prefix = 'm';
     }
     return '$prefix$addr1$addr2$addr3';
