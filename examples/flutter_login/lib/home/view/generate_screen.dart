@@ -97,7 +97,7 @@ class GenerateScreenState extends State<GenerateScreen> {
       }
     }
     ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('完成！')));
+        .showSnackBar(const SnackBar(content: Text('完成!')));
   }
 
   Widget _contentWidget() {

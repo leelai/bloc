@@ -18,12 +18,11 @@ class WinhomeQRCode {
 
   @override
   String toString() {
-    callOut['管理室'] = _adminSip;
-
-    address['管理室'] = _adminSip;
-    address['大門口機'] = _mainDoorSip;
-    address['小門口機'] = _smallDoorSip;
-    address['緊急對講機'] = _em;
+    callOut['管理室'] = '$_prefix$_adminSip';
+    address['管理室'] = '$_prefix$_adminSip';
+    address['大門口機'] = '$_prefix$_mainDoorSip';
+    address['小門口機'] = '$_prefix$_smallDoorSip';
+    address['緊急對講機'] = '$_prefix$_em';
 
     var qrCode = {
       'name': '$_prefix$_name',

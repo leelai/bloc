@@ -823,7 +823,7 @@ class _HomePageState extends State<HomePage> {
 
       for (var element in list) {
         var ty = element.getAttribute('ty') as String;
-        if (ty == '7') {
+        if (!(ty == '1' || ty == '4' || ty == '9' || ty == '6' || ty == '8')) {
           continue;
         }
         var ro = element.getAttribute('ro') as String;
@@ -886,7 +886,7 @@ class _HomePageState extends State<HomePage> {
         } catch (e) {
           logger.e('${whItem.ro} $e');
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('錯誤！ ${whItem.ro} $e')));
+              .showSnackBar(SnackBar(content: Text('錯誤! ${whItem.ro} $e')));
           return;
         }
 
