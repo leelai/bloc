@@ -16,8 +16,7 @@ dependencies:
     filesystem_picker: ^2.0.0
     flutter:
         sdk: flutter
-    flutter_bloc:
-        path: ../../packages/flutter_bloc
+    flutter_bloc: ^7.3.3
     flutter_datetime_picker: ^1.5.1
     flutter_mobx: ^2.0.2
     formz: ^0.4.0
@@ -43,13 +42,12 @@ dependencies:
     xml: ^5.1.2
 
 dev_dependencies:
-    bloc_test:
-        path: ../../packages/bloc_test
+    bloc_test: ^8.5.0
     build_runner: ^2.1.1
     flutter_test:
         sdk: flutter
     mobx_codegen: ^2.0.2
-    mocktail: ^0.1.0
+    mocktail: ^0.2.0
     moor_generator: ^4.6.0
 
 flutter:
